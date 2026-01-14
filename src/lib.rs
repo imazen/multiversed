@@ -1,3 +1,5 @@
+#![deny(unsafe_code)]
+
 //! Attribute macros wrapping `multiversion` with predefined SIMD target presets.
 //!
 //! This crate provides the `#[multiversed]` attribute that wraps `#[multiversion::multiversion]`
@@ -100,8 +102,8 @@ const AARCH64_SVE: &str =
     "aarch64+neon+lse+aes+sha2+sha3+crc+dotprod+rcpc+fp16+fhm+fcma+sve+i8mm+bf16";
 
 // aarch64-sve2: SVE2 + i8mm + bf16 (Neoverse N2 2022+, V2 2023+ / Graviton4+)
-const AARCH64_SVE2: &str =
-    "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+fhm+sve2+sve2-bitperm+i8mm+bf16";
+// Note: sve-bitperm is optional; using base sve2 for compatibility
+const AARCH64_SVE2: &str = "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+fhm+sve2+i8mm+bf16";
 
 // Note: wasm32 has no runtime feature detection and multiversion doesn't support it.
 // The wasm32-simd128 feature exists for documentation but generates no multiversion code.
