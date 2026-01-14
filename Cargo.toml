@@ -50,6 +50,11 @@ aarch64-sve2 = []
 
 [dev-dependencies]
 multiversion = "0.8"
+criterion = "0.5"
+
+[[bench]]
+name = "dispatch_overhead"
+harness = false
 
 [workspace]
 members = [

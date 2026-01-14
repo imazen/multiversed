@@ -29,23 +29,33 @@
 //!
 //! # Cargo Features (Presets)
 //!
-//! Each feature is a complete, non-cumulative preset.
+//! Each feature is a complete, non-cumulative preset based on the [x86-64 psABI]
+//! microarchitecture levels and ARM architecture versions.
+//!
+//! [x86-64 psABI]: https://gitlab.com/x86-psABIs/x86-64-ABI
 //!
 //! ## x86/x86_64
 //!
-//! | Feature | Targets | Hardware |
-//! |---------|---------|----------|
-//! | `x86-64-v2` | SSE4.2 + POPCNT | Nehalem 2008+, most CPUs since ~2010 |
-//! | `x86-64-v3` | AVX2 + FMA + BMI | Haswell 2013+, Zen 2 2019+ |
-//! | `x86-64-v4` | AVX-512 | Skylake-X 2017+, Zen 4 2022+ |
+//! | Feature | Key Features | Hardware |
+//! |---------|--------------|----------|
+//! | `x86-64-v2` | SSE4.2, POPCNT | Nehalem 2008+, Bulldozer 2011+ |
+//! | `x86-64-v3` | AVX2, FMA, BMI1/2 | Haswell 2013+, Zen 1 2017+ |
+//! | `x86-64-v4` | AVX-512 (F/BW/DQ/VL/CD) | Xeon 2017+, Zen 4 2022+ |
 //!
-//! ## aarch64 (above baseline - NEON is implicit)
+//! **Note**: Intel consumer CPUs (Alder Lake 12th gen through Arrow Lake) do NOT have
+//! AVX-512 due to E-core limitations. Only Xeon server, i9-X workstation, and AMD Zen 4+
+//! have AVX-512.
 //!
-//! | Feature | Targets | Hardware |
-//! |---------|---------|----------|
-//! | `aarch64-dotprod` | +dotprod +fp16 | Cortex-A75 2017+, Apple A11+ |
-//! | `aarch64-apple-m1` | +sha3 +fcma | Cortex-A76 2018+, Apple M1+ |
-//! | `aarch64-sve2` | +SVE2 +i8mm +bf16 | Neoverse V1 2020+, Apple M4 2024+ |
+//! ## aarch64 (above baseline - NEON is always present)
+//!
+//! | Feature | Key Features | Hardware |
+//! |---------|--------------|----------|
+//! | `aarch64-dotprod` | dotprod, fp16 | Neoverse N1, Cortex-A75+, Apple M1+, Oryon |
+//! | `aarch64-apple-m1` | + sha3, fcma | Apple M1+, Snapdragon X, Neoverse V1+ |
+//! | `aarch64-sve2` | + SVE2, i8mm, bf16 | Neoverse N2/V2+ (Graviton4) |
+//!
+//! **Note**: SVE/SVE2 is server-only (Neoverse). Apple Silicon, Qualcomm Oryon, and
+//! Cortex-A/X mobile cores do NOT implement SVE.
 //!
 //! # Attribute Arguments
 //!
@@ -84,7 +94,8 @@ const AARCH64_DOTPROD: &str = "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+f
 // aarch64 apple-m1: +sha3 +fcma (Cortex-A76 2018+, Apple M1+)
 const AARCH64_APPLE_M1: &str = "aarch64+neon+lse+aes+sha2+sha3+crc+dotprod+rcpc+fp16+fhm+fcma";
 
-// aarch64 SVE2: +SVE2 +i8mm +bf16 (Neoverse V1 2020+, Apple M4 2024+)
+// aarch64 SVE2: +SVE2 +i8mm +bf16 (Neoverse N2 2022+, V2 2023+)
+// Note: V1 (Graviton3) has SVE but NOT SVE2
 const AARCH64_SVE2: &str =
     "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+fhm+sve2+sve2-bitperm+i8mm+bf16";
 
