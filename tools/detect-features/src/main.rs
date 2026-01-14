@@ -29,103 +29,189 @@ fn main() {
     println!("No feature detection available for this architecture.");
 }
 
+// =============================================================================
+// x86/x86_64
+// =============================================================================
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+mod x86_features {
+    /// All x86 features we want to detect, grouped by category
+    pub const SSE_FEATURES: &[&str] =
+        &["sse", "sse2", "sse3", "ssse3", "sse4.1", "sse4.2", "sse4a"];
+    pub const AVX_FEATURES: &[&str] = &["avx", "avx2"];
+    pub const AVX512_FEATURES: &[&str] = &[
+        "avx512f",
+        "avx512cd",
+        "avx512bw",
+        "avx512dq",
+        "avx512vl",
+        "avx512ifma",
+        "avx512vbmi",
+        "avx512vbmi2",
+        "avx512vnni",
+        "avx512bitalg",
+        "avx512vpopcntdq",
+        "avx512bf16",
+        "avx512fp16",
+    ];
+    pub const SIMD_FEATURES: &[&str] = &["fma", "f16c", "avxvnni", "avxifma", "avxvnniint8"];
+    pub const BIT_FEATURES: &[&str] = &["bmi1", "bmi2", "abm", "lzcnt", "popcnt", "tbm"];
+    pub const CRYPTO_FEATURES: &[&str] = &["aes", "pclmulqdq", "sha", "vaes", "vpclmulqdq", "gfni"];
+    pub const OTHER_FEATURES: &[&str] = &[
+        "fxsr",
+        "xsave",
+        "cmpxchg16b",
+        "movbe",
+        "adx",
+        "rtm",
+        "rdrand",
+        "rdseed",
+    ];
+
+    /// Features to include in multiversion target string (in order)
+    pub const TARGET_STRING_FEATURES: &[&str] = &[
+        // SSE family
+        "sse",
+        "sse2",
+        "sse3",
+        "ssse3",
+        "sse4.1",
+        "sse4.2", // Core
+        "popcnt",
+        "cmpxchg16b", // AVX family
+        "avx",
+        "avx2", // BMI
+        "bmi1",
+        "bmi2", // FMA and related
+        "fma",
+        "f16c",
+        "lzcnt",
+        "movbe", // Save/restore
+        "fxsr",
+        "xsave", // AVX-512
+        "avx512f",
+        "avx512bw",
+        "avx512dq",
+        "avx512vl",
+        "avx512cd",
+        "avx512ifma",
+        "avx512vbmi",
+        "avx512vbmi2",
+        "avx512vnni",
+        "avx512bitalg",
+        "avx512vpopcntdq",
+        "avx512bf16",
+        // Crypto
+        "aes",
+        "pclmulqdq",
+        "sha",
+        "gfni",
+        "vaes",
+        "vpclmulqdq", // Other
+        "adx",
+        "rdrand",
+        "rdseed",
+    ];
+
+    /// Macro to check a feature - required because is_x86_feature_detected! needs literals
+    macro_rules! check {
+        ($name:tt) => {
+            std::arch::is_x86_feature_detected!($name)
+        };
+    }
+
+    pub fn is_detected(name: &str) -> bool {
+        match name {
+            "sse" => check!("sse"),
+            "sse2" => check!("sse2"),
+            "sse3" => check!("sse3"),
+            "ssse3" => check!("ssse3"),
+            "sse4.1" => check!("sse4.1"),
+            "sse4.2" => check!("sse4.2"),
+            "sse4a" => check!("sse4a"),
+            "avx" => check!("avx"),
+            "avx2" => check!("avx2"),
+            "avx512f" => check!("avx512f"),
+            "avx512cd" => check!("avx512cd"),
+            "avx512bw" => check!("avx512bw"),
+            "avx512dq" => check!("avx512dq"),
+            "avx512vl" => check!("avx512vl"),
+            "avx512ifma" => check!("avx512ifma"),
+            "avx512vbmi" => check!("avx512vbmi"),
+            "avx512vbmi2" => check!("avx512vbmi2"),
+            "avx512vnni" => check!("avx512vnni"),
+            "avx512bitalg" => check!("avx512bitalg"),
+            "avx512vpopcntdq" => check!("avx512vpopcntdq"),
+            "avx512bf16" => check!("avx512bf16"),
+            "avx512fp16" => check!("avx512fp16"),
+            "fma" => check!("fma"),
+            "f16c" => check!("f16c"),
+            "avxvnni" => check!("avxvnni"),
+            "avxifma" => check!("avxifma"),
+            "avxvnniint8" => check!("avxvnniint8"),
+            "bmi1" => check!("bmi1"),
+            "bmi2" => check!("bmi2"),
+            "abm" => check!("abm"),
+            "lzcnt" => check!("lzcnt"),
+            "popcnt" => check!("popcnt"),
+            "tbm" => check!("tbm"),
+            "aes" => check!("aes"),
+            "pclmulqdq" => check!("pclmulqdq"),
+            "sha" => check!("sha"),
+            "vaes" => check!("vaes"),
+            "vpclmulqdq" => check!("vpclmulqdq"),
+            "gfni" => check!("gfni"),
+            "fxsr" => check!("fxsr"),
+            "xsave" => check!("xsave"),
+            "cmpxchg16b" => check!("cmpxchg16b"),
+            "movbe" => check!("movbe"),
+            "adx" => check!("adx"),
+            "rtm" => check!("rtm"),
+            "rdrand" => check!("rdrand"),
+            "rdseed" => check!("rdseed"),
+            _ => false,
+        }
+    }
+}
+
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 fn detect_x86_features() {
-    use std::arch::is_x86_feature_detected;
+    use x86_features::*;
 
     println!("## x86/x86_64 Features");
     println!();
 
-    // Macro to check and print feature status
-    macro_rules! check_feature {
-        ($name:tt) => {
-            let detected = is_x86_feature_detected!($name);
-            println!("  {}: {}", $name, if detected { "✓" } else { "✗" });
-        };
+    fn print_features(title: &str, features: &[&str]) {
+        println!("### {}", title);
+        for &name in features {
+            let detected = is_detected(name);
+            println!("  {}: {}", name, if detected { "✓" } else { "✗" });
+        }
+        println!();
     }
 
-    println!("### SSE Family");
-    check_feature!("sse");
-    check_feature!("sse2");
-    check_feature!("sse3");
-    check_feature!("ssse3");
-    check_feature!("sse4.1");
-    check_feature!("sse4.2");
-    check_feature!("sse4a");
-    println!();
+    print_features("SSE Family", SSE_FEATURES);
+    print_features("AVX Family", AVX_FEATURES);
+    print_features("AVX-512 Family", AVX512_FEATURES);
+    print_features("Other SIMD", SIMD_FEATURES);
+    print_features("Bit Manipulation", BIT_FEATURES);
+    print_features("Crypto", CRYPTO_FEATURES);
+    print_features("Other", OTHER_FEATURES);
 
-    println!("### AVX Family");
-    check_feature!("avx");
-    check_feature!("avx2");
-    println!();
-
-    println!("### AVX-512 Family");
-    check_feature!("avx512f");
-    check_feature!("avx512cd");
-    check_feature!("avx512bw");
-    check_feature!("avx512dq");
-    check_feature!("avx512vl");
-    check_feature!("avx512ifma");
-    check_feature!("avx512vbmi");
-    check_feature!("avx512vbmi2");
-    check_feature!("avx512vnni");
-    check_feature!("avx512bitalg");
-    check_feature!("avx512vpopcntdq");
-    check_feature!("avx512bf16");
-    check_feature!("avx512fp16");
-    println!();
-
-    println!("### Other SIMD");
-    check_feature!("fma");
-    check_feature!("f16c");
-    check_feature!("avxvnni");
-    check_feature!("avxifma");
-    check_feature!("avxvnniint8");
-    println!();
-
-    println!("### Bit Manipulation");
-    check_feature!("bmi1");
-    check_feature!("bmi2");
-    check_feature!("abm");
-    check_feature!("lzcnt");
-    check_feature!("popcnt");
-    check_feature!("tbm");
-    println!();
-
-    println!("### Crypto");
-    check_feature!("aes");
-    check_feature!("pclmulqdq");
-    check_feature!("sha");
-    check_feature!("vaes");
-    check_feature!("vpclmulqdq");
-    check_feature!("gfni");
-    println!();
-
-    println!("### Other");
-    check_feature!("fxsr");
-    check_feature!("xsave");
-    check_feature!("cmpxchg16b");
-    check_feature!("movbe");
-    check_feature!("adx");
-    check_feature!("rtm");
-    check_feature!("rdrand");
-    check_feature!("rdseed");
-    println!();
-
-    // Print summary of microarch levels
+    // Microarch levels
     println!("### Microarchitecture Level Summary");
-    let has_v2 = is_x86_feature_detected!("sse4.2") && is_x86_feature_detected!("popcnt");
+    let has_v2 = is_detected("sse4.2") && is_detected("popcnt");
     let has_v3 = has_v2
-        && is_x86_feature_detected!("avx2")
-        && is_x86_feature_detected!("fma")
-        && is_x86_feature_detected!("bmi1")
-        && is_x86_feature_detected!("bmi2");
+        && is_detected("avx2")
+        && is_detected("fma")
+        && is_detected("bmi1")
+        && is_detected("bmi2");
     let has_v4 = has_v3
-        && is_x86_feature_detected!("avx512f")
-        && is_x86_feature_detected!("avx512bw")
-        && is_x86_feature_detected!("avx512dq")
-        && is_x86_feature_detected!("avx512vl")
-        && is_x86_feature_detected!("avx512cd");
+        && is_detected("avx512f")
+        && is_detected("avx512bw")
+        && is_detected("avx512dq")
+        && is_detected("avx512vl")
+        && is_detected("avx512cd");
 
     println!(
         "  x86-64-v2 (SSE4.2+POPCNT): {}",
@@ -138,245 +224,179 @@ fn detect_x86_features() {
     println!("  x86-64-v4 (AVX-512): {}", if has_v4 { "✓" } else { "✗" });
     println!();
 
-    // Generate multiversion target string
+    // Target string
     println!("### Multiversion Target String");
-    let target_string = compose_x86_target_string();
     println!();
-    println!("  {}", target_string);
+    println!("  {}", compose_x86_target_string());
     println!();
 }
 
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 fn compose_x86_target_string() -> String {
-    use std::arch::is_x86_feature_detected;
+    use x86_features::*;
 
     let mut features = Vec::new();
 
-    // Base architecture
     #[cfg(target_arch = "x86_64")]
     features.push("x86_64");
     #[cfg(target_arch = "x86")]
     features.push("x86");
 
-    // Collect all detected features in a sensible order
-    // SSE family
-    if is_x86_feature_detected!("sse") {
-        features.push("sse");
-    }
-    if is_x86_feature_detected!("sse2") {
-        features.push("sse2");
-    }
-    if is_x86_feature_detected!("sse3") {
-        features.push("sse3");
-    }
-    if is_x86_feature_detected!("ssse3") {
-        features.push("ssse3");
-    }
-    if is_x86_feature_detected!("sse4.1") {
-        features.push("sse4.1");
-    }
-    if is_x86_feature_detected!("sse4.2") {
-        features.push("sse4.2");
-    }
-
-    // Core features
-    if is_x86_feature_detected!("popcnt") {
-        features.push("popcnt");
-    }
-    if is_x86_feature_detected!("cmpxchg16b") {
-        features.push("cmpxchg16b");
-    }
-
-    // AVX family
-    if is_x86_feature_detected!("avx") {
-        features.push("avx");
-    }
-    if is_x86_feature_detected!("avx2") {
-        features.push("avx2");
-    }
-
-    // BMI
-    if is_x86_feature_detected!("bmi1") {
-        features.push("bmi1");
-    }
-    if is_x86_feature_detected!("bmi2") {
-        features.push("bmi2");
-    }
-
-    // FMA and related
-    if is_x86_feature_detected!("fma") {
-        features.push("fma");
-    }
-    if is_x86_feature_detected!("f16c") {
-        features.push("f16c");
-    }
-    if is_x86_feature_detected!("lzcnt") {
-        features.push("lzcnt");
-    }
-    if is_x86_feature_detected!("movbe") {
-        features.push("movbe");
-    }
-
-    // Save/restore
-    if is_x86_feature_detected!("fxsr") {
-        features.push("fxsr");
-    }
-    if is_x86_feature_detected!("xsave") {
-        features.push("xsave");
-    }
-
-    // AVX-512 family
-    if is_x86_feature_detected!("avx512f") {
-        features.push("avx512f");
-    }
-    if is_x86_feature_detected!("avx512bw") {
-        features.push("avx512bw");
-    }
-    if is_x86_feature_detected!("avx512dq") {
-        features.push("avx512dq");
-    }
-    if is_x86_feature_detected!("avx512vl") {
-        features.push("avx512vl");
-    }
-    if is_x86_feature_detected!("avx512cd") {
-        features.push("avx512cd");
-    }
-    if is_x86_feature_detected!("avx512ifma") {
-        features.push("avx512ifma");
-    }
-    if is_x86_feature_detected!("avx512vbmi") {
-        features.push("avx512vbmi");
-    }
-    if is_x86_feature_detected!("avx512vbmi2") {
-        features.push("avx512vbmi2");
-    }
-    if is_x86_feature_detected!("avx512vnni") {
-        features.push("avx512vnni");
-    }
-    if is_x86_feature_detected!("avx512bitalg") {
-        features.push("avx512bitalg");
-    }
-    if is_x86_feature_detected!("avx512vpopcntdq") {
-        features.push("avx512vpopcntdq");
-    }
-    if is_x86_feature_detected!("avx512bf16") {
-        features.push("avx512bf16");
-    }
-
-    // Crypto
-    if is_x86_feature_detected!("aes") {
-        features.push("aes");
-    }
-    if is_x86_feature_detected!("pclmulqdq") {
-        features.push("pclmulqdq");
-    }
-    if is_x86_feature_detected!("sha") {
-        features.push("sha");
-    }
-    if is_x86_feature_detected!("gfni") {
-        features.push("gfni");
-    }
-    if is_x86_feature_detected!("vaes") {
-        features.push("vaes");
-    }
-    if is_x86_feature_detected!("vpclmulqdq") {
-        features.push("vpclmulqdq");
-    }
-
-    // Other useful features
-    if is_x86_feature_detected!("adx") {
-        features.push("adx");
-    }
-    if is_x86_feature_detected!("rdrand") {
-        features.push("rdrand");
-    }
-    if is_x86_feature_detected!("rdseed") {
-        features.push("rdseed");
+    for &name in TARGET_STRING_FEATURES {
+        if is_detected(name) {
+            features.push(name);
+        }
     }
 
     features.join("+")
 }
 
+// =============================================================================
+// aarch64
+// =============================================================================
+
+#[cfg(target_arch = "aarch64")]
+mod aarch64_features {
+    pub const SIMD_FEATURES: &[&str] = &[
+        "neon", "asimd", "fp16", "dotprod", "i8mm", "bf16", "fhm", "rdm", "fcma",
+    ];
+    pub const SVE_FEATURES: &[&str] = &[
+        "sve",
+        "sve2",
+        "sve2-aes",
+        "sve2-sm4",
+        "sve2-sha3",
+        "sve2-bitperm",
+        "f32mm",
+        "f64mm",
+    ];
+    pub const CRYPTO_FEATURES: &[&str] = &["aes", "sha2", "sha3", "sm4", "pmull"];
+    pub const ATOMIC_FEATURES: &[&str] = &["lse", "lse2", "rcpc", "rcpc2", "crc"];
+    pub const OTHER_FEATURES: &[&str] = &[
+        "fp", "jsconv", "dpb", "dpb2", "frintts", "flagm", "ssbs", "sb", "paca", "pacg", "dit",
+        "bti", "mte", "tme",
+    ];
+
+    pub const TARGET_STRING_FEATURES: &[&str] = &[
+        "neon",
+        "lse",
+        "lse2",
+        "aes",
+        "sha2",
+        "sha3",
+        "sm4",
+        "pmull",
+        "crc",
+        "dotprod",
+        "fp16",
+        "fhm",
+        "rdm",
+        "fcma",
+        "i8mm",
+        "bf16",
+        "rcpc",
+        "rcpc2",
+        "sve",
+        "sve2",
+        "sve2-aes",
+        "sve2-bitperm",
+        "sve2-sha3",
+        "sve2-sm4",
+        "f32mm",
+        "f64mm",
+        "jsconv",
+        "dpb",
+        "dpb2",
+        "frintts",
+        "flagm",
+        "sb",
+        "paca",
+        "pacg",
+        "dit",
+        "bti",
+    ];
+
+    macro_rules! check {
+        ($name:tt) => {
+            std::arch::is_aarch64_feature_detected!($name)
+        };
+    }
+
+    pub fn is_detected(name: &str) -> bool {
+        match name {
+            "neon" => check!("neon"),
+            "asimd" => check!("asimd"),
+            "fp16" => check!("fp16"),
+            "dotprod" => check!("dotprod"),
+            "i8mm" => check!("i8mm"),
+            "bf16" => check!("bf16"),
+            "fhm" => check!("fhm"),
+            "rdm" => check!("rdm"),
+            "fcma" => check!("fcma"),
+            "sve" => check!("sve"),
+            "sve2" => check!("sve2"),
+            "sve2-aes" => check!("sve2-aes"),
+            "sve2-sm4" => check!("sve2-sm4"),
+            "sve2-sha3" => check!("sve2-sha3"),
+            "sve2-bitperm" => check!("sve2-bitperm"),
+            "f32mm" => check!("f32mm"),
+            "f64mm" => check!("f64mm"),
+            "aes" => check!("aes"),
+            "sha2" => check!("sha2"),
+            "sha3" => check!("sha3"),
+            "sm4" => check!("sm4"),
+            "pmull" => check!("pmull"),
+            "lse" => check!("lse"),
+            "lse2" => check!("lse2"),
+            "rcpc" => check!("rcpc"),
+            "rcpc2" => check!("rcpc2"),
+            "crc" => check!("crc"),
+            "fp" => check!("fp"),
+            "jsconv" => check!("jsconv"),
+            "dpb" => check!("dpb"),
+            "dpb2" => check!("dpb2"),
+            "frintts" => check!("frintts"),
+            "flagm" => check!("flagm"),
+            "ssbs" => check!("ssbs"),
+            "sb" => check!("sb"),
+            "paca" => check!("paca"),
+            "pacg" => check!("pacg"),
+            "dit" => check!("dit"),
+            "bti" => check!("bti"),
+            "mte" => check!("mte"),
+            "tme" => check!("tme"),
+            _ => false,
+        }
+    }
+}
+
 #[cfg(target_arch = "aarch64")]
 fn detect_aarch64_features() {
-    use std::arch::is_aarch64_feature_detected;
+    use aarch64_features::*;
 
     println!("## aarch64 Features");
     println!();
 
-    // Use std_detect crate macros
-    macro_rules! check_feature {
-        ($name:tt) => {
-            let detected = is_aarch64_feature_detected!($name);
-            println!("  {}: {}", $name, if detected { "✓" } else { "✗" });
-        };
+    fn print_features(title: &str, features: &[&str]) {
+        println!("### {}", title);
+        for &name in features {
+            let detected = is_detected(name);
+            println!("  {}: {}", name, if detected { "✓" } else { "✗" });
+        }
+        println!();
     }
 
-    println!("### SIMD");
-    check_feature!("neon");
-    check_feature!("asimd");
-    check_feature!("fp16");
-    check_feature!("dotprod");
-    check_feature!("i8mm");
-    check_feature!("bf16");
-    check_feature!("fhm");
-    check_feature!("rdm");
-    check_feature!("fcma");
-    println!();
+    print_features("SIMD", SIMD_FEATURES);
+    print_features("SVE", SVE_FEATURES);
+    print_features("Crypto", CRYPTO_FEATURES);
+    print_features("Atomics & Memory", ATOMIC_FEATURES);
+    print_features("Other", OTHER_FEATURES);
 
-    println!("### SVE");
-    check_feature!("sve");
-    check_feature!("sve2");
-    check_feature!("sve2-aes");
-    check_feature!("sve2-sm4");
-    check_feature!("sve2-sha3");
-    check_feature!("sve2-bitperm");
-    check_feature!("f32mm");
-    check_feature!("f64mm");
-    println!();
-
-    println!("### Crypto");
-    check_feature!("aes");
-    check_feature!("sha2");
-    check_feature!("sha3");
-    check_feature!("sm4");
-    check_feature!("pmull");
-    println!();
-
-    println!("### Atomics & Memory");
-    check_feature!("lse");
-    check_feature!("lse2");
-    check_feature!("rcpc");
-    check_feature!("rcpc2");
-    check_feature!("crc");
-    println!();
-
-    println!("### Other");
-    check_feature!("fp");
-    check_feature!("jsconv");
-    check_feature!("dpb");
-    check_feature!("dpb2");
-    check_feature!("frintts");
-    check_feature!("flagm");
-    check_feature!("ssbs");
-    check_feature!("sb");
-    check_feature!("paca");
-    check_feature!("pacg");
-    check_feature!("dit");
-    check_feature!("bti");
-    check_feature!("mte");
-    check_feature!("tme");
-    println!();
-
-    // Print summary of preset levels
+    // Preset levels
     println!("### Preset Level Summary");
-    let has_dotprod =
-        is_aarch64_feature_detected!("dotprod") && is_aarch64_feature_detected!("fp16");
-    let has_apple_m1 =
-        has_dotprod && is_aarch64_feature_detected!("sha3") && is_aarch64_feature_detected!("fcma");
-    let has_sve2 = is_aarch64_feature_detected!("sve2")
-        && is_aarch64_feature_detected!("i8mm")
-        && is_aarch64_feature_detected!("bf16");
+    let has_dotprod = is_detected("dotprod") && is_detected("fp16");
+    let has_apple_m1 = has_dotprod && is_detected("sha3") && is_detected("fcma");
+    let has_sve2 = is_detected("sve2") && is_detected("i8mm") && is_detected("bf16");
 
     println!(
         "  aarch64-dotprod (dotprod+fp16): {}",
@@ -392,149 +412,31 @@ fn detect_aarch64_features() {
     );
     println!();
 
-    // Generate multiversion target string
+    // Target string
     println!("### Multiversion Target String");
-    let target_string = compose_aarch64_target_string();
     println!();
-    println!("  {}", target_string);
+    println!("  {}", compose_aarch64_target_string());
     println!();
 }
 
 #[cfg(target_arch = "aarch64")]
 fn compose_aarch64_target_string() -> String {
-    use std::arch::is_aarch64_feature_detected;
+    use aarch64_features::*;
 
-    let mut features = Vec::new();
+    let mut features = vec!["aarch64"];
 
-    // Base architecture
-    features.push("aarch64");
-
-    // Core SIMD (neon is baseline, always present)
-    if is_aarch64_feature_detected!("neon") {
-        features.push("neon");
-    }
-
-    // Atomics
-    if is_aarch64_feature_detected!("lse") {
-        features.push("lse");
-    }
-    if is_aarch64_feature_detected!("lse2") {
-        features.push("lse2");
-    }
-
-    // Crypto
-    if is_aarch64_feature_detected!("aes") {
-        features.push("aes");
-    }
-    if is_aarch64_feature_detected!("sha2") {
-        features.push("sha2");
-    }
-    if is_aarch64_feature_detected!("sha3") {
-        features.push("sha3");
-    }
-    if is_aarch64_feature_detected!("sm4") {
-        features.push("sm4");
-    }
-    if is_aarch64_feature_detected!("pmull") {
-        features.push("pmull");
-    }
-
-    // CRC
-    if is_aarch64_feature_detected!("crc") {
-        features.push("crc");
-    }
-
-    // SIMD extensions
-    if is_aarch64_feature_detected!("dotprod") {
-        features.push("dotprod");
-    }
-    if is_aarch64_feature_detected!("fp16") {
-        features.push("fp16");
-    }
-    if is_aarch64_feature_detected!("fhm") {
-        features.push("fhm");
-    }
-    if is_aarch64_feature_detected!("rdm") {
-        features.push("rdm");
-    }
-    if is_aarch64_feature_detected!("fcma") {
-        features.push("fcma");
-    }
-    if is_aarch64_feature_detected!("i8mm") {
-        features.push("i8mm");
-    }
-    if is_aarch64_feature_detected!("bf16") {
-        features.push("bf16");
-    }
-
-    // RCPC
-    if is_aarch64_feature_detected!("rcpc") {
-        features.push("rcpc");
-    }
-    if is_aarch64_feature_detected!("rcpc2") {
-        features.push("rcpc2");
-    }
-
-    // SVE family
-    if is_aarch64_feature_detected!("sve") {
-        features.push("sve");
-    }
-    if is_aarch64_feature_detected!("sve2") {
-        features.push("sve2");
-    }
-    if is_aarch64_feature_detected!("sve2-aes") {
-        features.push("sve2-aes");
-    }
-    if is_aarch64_feature_detected!("sve2-bitperm") {
-        features.push("sve2-bitperm");
-    }
-    if is_aarch64_feature_detected!("sve2-sha3") {
-        features.push("sve2-sha3");
-    }
-    if is_aarch64_feature_detected!("sve2-sm4") {
-        features.push("sve2-sm4");
-    }
-    if is_aarch64_feature_detected!("f32mm") {
-        features.push("f32mm");
-    }
-    if is_aarch64_feature_detected!("f64mm") {
-        features.push("f64mm");
-    }
-
-    // Other features
-    if is_aarch64_feature_detected!("jsconv") {
-        features.push("jsconv");
-    }
-    if is_aarch64_feature_detected!("dpb") {
-        features.push("dpb");
-    }
-    if is_aarch64_feature_detected!("dpb2") {
-        features.push("dpb2");
-    }
-    if is_aarch64_feature_detected!("frintts") {
-        features.push("frintts");
-    }
-    if is_aarch64_feature_detected!("flagm") {
-        features.push("flagm");
-    }
-    if is_aarch64_feature_detected!("sb") {
-        features.push("sb");
-    }
-    if is_aarch64_feature_detected!("paca") {
-        features.push("paca");
-    }
-    if is_aarch64_feature_detected!("pacg") {
-        features.push("pacg");
-    }
-    if is_aarch64_feature_detected!("dit") {
-        features.push("dit");
-    }
-    if is_aarch64_feature_detected!("bti") {
-        features.push("bti");
+    for &name in TARGET_STRING_FEATURES {
+        if is_detected(name) {
+            features.push(name);
+        }
     }
 
     features.join("+")
 }
+
+// =============================================================================
+// wasm32
+// =============================================================================
 
 #[cfg(target_arch = "wasm32")]
 fn detect_wasm_features() {
@@ -544,7 +446,6 @@ fn detect_wasm_features() {
     println!("Features are determined at compile time via -C target-feature.");
     println!();
 
-    // Compile-time detection only
     println!("### Compile-time Features");
 
     #[cfg(target_feature = "simd128")]
@@ -569,31 +470,20 @@ fn detect_wasm_features() {
 
     println!();
 
-    // Generate compile-time target string
     println!("### Multiversion Target String (compile-time)");
-    let target_string = compose_wasm_target_string();
     println!();
-    println!("  {}", target_string);
-    println!();
-}
 
-#[cfg(target_arch = "wasm32")]
-fn compose_wasm_target_string() -> String {
-    let mut features = Vec::new();
-
-    features.push("wasm32");
+    let mut features = vec!["wasm32"];
 
     #[cfg(target_feature = "simd128")]
     features.push("simd128");
-
     #[cfg(target_feature = "relaxed-simd")]
     features.push("relaxed-simd");
-
     #[cfg(target_feature = "atomics")]
     features.push("atomics");
-
     #[cfg(target_feature = "bulk-memory")]
     features.push("bulk-memory");
 
-    features.join("+")
+    println!("  {}", features.join("+"));
+    println!();
 }
