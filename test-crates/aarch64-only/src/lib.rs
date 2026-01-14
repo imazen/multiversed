@@ -2,18 +2,13 @@
 //!
 //! Tests that aarch64-only configurations work correctly, and that the macro
 //! generates appropriate cfg_attr for aarch64 architecture only.
+//! Note: baseline NEON is implicit - these presets are all above baseline.
 
 use multiversed::multiversed;
 
-/// Uses all four aarch64 presets from features
+/// Uses all three aarch64 presets from features
 #[multiversed]
 pub fn sum_all_aarch64(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
-
-/// Explicitly use baseline (NEON + crypto)
-#[multiversed("aarch64-baseline")]
-pub fn sum_baseline(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -23,9 +18,9 @@ pub fn sum_dotprod(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use crypto-ext (sha3 + fcma)
-#[multiversed("aarch64-crypto-ext")]
-pub fn sum_crypto_ext(data: &[f32]) -> f32 {
+/// Explicitly use apple-m1 (sha3 + fcma)
+#[multiversed("aarch64-apple-m1")]
+pub fn sum_apple_m1(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -36,8 +31,8 @@ pub fn sum_sve2(data: &[f32]) -> f32 {
 }
 
 /// Mix of explicit presets
-#[multiversed("aarch64-baseline", "aarch64-sve2")]
-pub fn sum_baseline_and_sve2(data: &[f32]) -> f32 {
+#[multiversed("aarch64-dotprod", "aarch64-sve2")]
+pub fn sum_dotprod_and_sve2(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -60,18 +55,13 @@ mod tests {
     }
 
     #[test]
-    fn test_baseline() {
-        assert_eq!(sum_baseline(&TEST_DATA), EXPECTED_SUM);
-    }
-
-    #[test]
     fn test_dotprod() {
         assert_eq!(sum_dotprod(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]
-    fn test_crypto_ext() {
-        assert_eq!(sum_crypto_ext(&TEST_DATA), EXPECTED_SUM);
+    fn test_apple_m1() {
+        assert_eq!(sum_apple_m1(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]
@@ -80,8 +70,8 @@ mod tests {
     }
 
     #[test]
-    fn test_baseline_and_sve2() {
-        assert_eq!(sum_baseline_and_sve2(&TEST_DATA), EXPECTED_SUM);
+    fn test_dotprod_and_sve2() {
+        assert_eq!(sum_dotprod_and_sve2(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]

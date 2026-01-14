@@ -29,7 +29,7 @@ pub fn sum_array_sve2(data: &[f32]) -> f32 {
 }
 
 /// Function with multiple explicit presets
-#[multiversed("x86-64-v3", "aarch64-baseline")]
+#[multiversed("x86-64-v3", "aarch64-dotprod")]
 pub fn sum_array_explicit(data: &[f32]) -> f32 {
     data.iter().sum()
 }

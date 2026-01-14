@@ -9,10 +9,8 @@ multiversed = { path = "../..", features = [
     "x86-64-v2",
     "x86-64-v3",
     "x86-64-v4",
-    "aarch64-baseline",
     "aarch64-dotprod",
-    "aarch64-crypto-ext",
+    "aarch64-apple-m1",
     "aarch64-sve2",
-    "wasm32-simd128",
 ] }
 multiversion = "0.8"

@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-multiversed = { path = "../..", features = ["force-disable", "x86-64-v3", "aarch64-baseline"] }
+multiversed = { path = "../..", features = ["force-disable", "x86-64-v3", "aarch64-dotprod"] }
 # Note: multiversion is NOT needed when force-disable is active, since no
 # multiversion code is generated. But we include it anyway to verify there
 # are no conflicts.

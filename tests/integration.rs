@@ -44,21 +44,16 @@ fn sum_multi_x86(data: &[f32]) -> f32 {
 }
 
 // ============================================================================
-// Explicit aarch64 preset selection
+// Explicit aarch64 preset selection (above baseline - NEON is implicit)
 // ============================================================================
-
-#[multiversed("aarch64-baseline")]
-fn sum_aarch64_baseline(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
 
 #[multiversed("aarch64-dotprod")]
 fn sum_aarch64_dotprod(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-#[multiversed("aarch64-crypto-ext")]
-fn sum_aarch64_crypto_ext(data: &[f32]) -> f32 {
+#[multiversed("aarch64-apple-m1")]
+fn sum_aarch64_apple_m1(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -67,7 +62,7 @@ fn sum_aarch64_sve2(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-#[multiversed("aarch64-baseline", "aarch64-dotprod", "aarch64-sve2")]
+#[multiversed("aarch64-dotprod", "aarch64-apple-m1", "aarch64-sve2")]
 fn sum_multi_aarch64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
@@ -92,7 +87,7 @@ fn sum_high_tier(data: &[f32]) -> f32 {
 }
 
 // wasm32-simd128 is silently filtered out
-#[multiversed("x86-64-v3", "aarch64-baseline", "wasm32-simd128")]
+#[multiversed("x86-64-v3", "aarch64-dotprod", "wasm32-simd128")]
 fn sum_all_archs(data: &[f32]) -> f32 {
     data.iter().sum()
 }
@@ -106,7 +101,7 @@ fn sum_mixed_x86(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-#[multiversed("aarch64-baseline", "aarch64+neon")]
+#[multiversed("aarch64-dotprod", "aarch64+neon")]
 fn sum_mixed_aarch64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
@@ -182,9 +177,8 @@ fn test_x86_presets() {
 #[test]
 fn test_aarch64_presets() {
     let data = [1.0f32, 2.0, 3.0, 4.0];
-    assert!((sum_aarch64_baseline(&data) - 10.0).abs() < 0.001);
     assert!((sum_aarch64_dotprod(&data) - 10.0).abs() < 0.001);
-    assert!((sum_aarch64_crypto_ext(&data) - 10.0).abs() < 0.001);
+    assert!((sum_aarch64_apple_m1(&data) - 10.0).abs() < 0.001);
     assert!((sum_aarch64_sve2(&data) - 10.0).abs() < 0.001);
     assert!((sum_multi_aarch64(&data) - 10.0).abs() < 0.001);
 }
