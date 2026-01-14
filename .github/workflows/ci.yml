@@ -48,15 +48,21 @@ jobs:
       - name: Build (no default features)
         run: cargo build --no-default-features --verbose
 
-      - name: Build (x86 only)
-        run: cargo build --no-default-features --features x86-v4 --verbose
+      - name: Build (x86-64-v4 only)
+        run: cargo build --no-default-features --features x86-64-v4 --verbose
 
-      - name: Build (aarch64 only)
+      - name: Build (aarch64-sve2 only)
         run: cargo build --no-default-features --features aarch64-sve2 --verbose
 
-  # Test wasm32 target with simd128
+      - name: Build (multiple x86 tiers)
+        run: cargo build --no-default-features --features "x86-64-v3,x86-64-v4" --verbose
+
+      - name: Build (multiple aarch64 tiers)
+        run: cargo build --no-default-features --features "aarch64-baseline,aarch64-dotprod,aarch64-sve2" --verbose
+
+  # Test wasm32 target
   wasm:
-    name: Test wasm32-simd128
+    name: Test wasm32
     runs-on: ubuntu-latest
 
     steps:
