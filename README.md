@@ -47,6 +47,12 @@ Each feature is a complete, non-cumulative preset. Enable the ones you want.
 | `aarch64-crypto-ext` | +sha3 +fcma | Cortex-A76 2018+, Apple M1+ |
 | `aarch64-sve2` | +SVE2 +i8mm +bf16 | Neoverse V1 2020+, Apple M4 2024+ |
 
+### Special Features
+
+| Feature | Description |
+|---------|-------------|
+| `force-disable` | Disable all multiversioning (passthrough only). Useful for debugging or faster builds. |
+
 ### Examples
 
 ```toml
@@ -58,6 +64,9 @@ multiversed = { version = "0.1", default-features = false, features = ["x86-64-v
 
 # Multiple tiers (runtime dispatch picks best)
 multiversed = { version = "0.1", features = ["x86-64-v4"] }  # adds v4 to default v3
+
+# Disable multiversioning entirely (for debugging/profiling)
+multiversed = { version = "0.1", features = ["force-disable"] }
 ```
 
 ## Attribute Arguments

@@ -19,6 +19,9 @@ proc-macro2 = "1.0"
 [features]
 default = ["x86-64-v3", "aarch64-baseline"]
 
+# Disable all multiversioning (passthrough only, useful for debugging/faster builds)
+force-disable = []
+
 # ============================================================================
 # x86/x86_64 presets (non-cumulative, each is complete)
 # ============================================================================

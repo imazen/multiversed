@@ -227,9 +227,23 @@ fn default_aarch64_targets() -> Vec<&'static str> {
 /// - **Raw target strings**: Any string with `+` is passed through to multiversion
 #[proc_macro_attribute]
 pub fn multiversed(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let args = parse_macro_input!(attr as MultiversedArgs);
     let func = parse_macro_input!(item as ItemFn);
 
+    // force-disable feature: passthrough without any multiversion
+    #[cfg(feature = "force-disable")]
+    {
+        let _ = attr; // suppress unused warning
+        return quote! { #func }.into();
+    }
+
+    #[cfg(not(feature = "force-disable"))]
+    {
+        let args = parse_macro_input!(attr as MultiversedArgs);
+        multiversed_impl(args, func)
+    }
+}
+
+fn multiversed_impl(args: MultiversedArgs, func: ItemFn) -> TokenStream {
     // Collect targets, separating by architecture
     let (x86_targets, aarch64_targets): (Vec<String>, Vec<String>) = if args.targets.is_empty() {
         // No explicit targets - use cargo feature defaults

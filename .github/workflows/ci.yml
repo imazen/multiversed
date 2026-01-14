@@ -60,6 +60,9 @@ jobs:
       - name: Build (multiple aarch64 tiers)
         run: cargo build --no-default-features --features "aarch64-baseline,aarch64-dotprod,aarch64-sve2" --verbose
 
+      - name: Test (force-disable)
+        run: cargo test --features force-disable --verbose
+
   # Test wasm32 target
   wasm:
     name: Test wasm32
