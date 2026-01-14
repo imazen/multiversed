@@ -2,14 +2,101 @@
 
 Working document for designing multiversed presets.
 
-## x86-64 Microarchitecture Levels
+## x86-64 Microarchitecture Levels (psABI Standard)
 
-| Level | Key Features | CPUs | Year |
-|-------|--------------|------|------|
-| **x86-64-v1** | SSE2 (baseline) | All x86-64 | 2003+ |
-| **x86-64-v2** | SSE4.2, POPCNT | Nehalem, Bulldozer | 2008+ |
-| **x86-64-v3** | AVX2, FMA, BMI1/2 | Haswell, Zen 2 | 2013+ |
-| **x86-64-v4** | AVX-512F/BW/DQ/VL/CD | Skylake-X, Zen 4 | 2017+ |
+Source: [x86-64 psABI](https://gitlab.com/x86-psABIs/x86-64-ABI), [openSUSE Wiki](https://en.opensuse.org/X86-64_microarchitecture_levels)
+
+Defined in 2020 by AMD, Intel, Red Hat, and SUSE. Each level is a superset of the previous.
+
+| Level | Features Added | Total Features |
+|-------|----------------|----------------|
+| **v1** | (baseline) | CMOV, CX8, FPU, FXSR, MMX, SCE, SSE, SSE2 |
+| **v2** | +SSE3/4, POPCNT | + CX16, LAHF-SAHF, POPCNT, SSE3, SSSE3, SSE4.1, SSE4.2 |
+| **v3** | +AVX2, FMA, BMI | + AVX, AVX2, BMI1, BMI2, F16C, FMA, LZCNT, MOVBE, XSAVE |
+| **v4** | +AVX-512 core | + AVX512F, AVX512BW, AVX512CD, AVX512DQ, AVX512VL |
+
+Note: Crypto (AES-NI, SHA) and RDRAND excluded from level requirements.
+
+## x86-64 Intel CPUs
+
+| Microarch | Different names / different SKUs | Level | AVX-512 | Notes | Year |
+|-----------|-----------|-------|---------|-------|------|
+| **Nehalem** | Core i 1st gen | v2 | - | First SSE4.2 | 2008 |
+| **Sandy Bridge** | Core i 2nd gen | v2 | - | First AVX | 2011 |
+| **Haswell** | Core i 4th gen | v3 | - | First AVX2+FMA | 2013 |
+| **Skylake** | Core i 6th gen | v3 | - | Consumer | 2015 |
+| **Skylake-X** | Core X, Xeon W | v4 | ✓ Full | First AVX-512 desktop | 2017 |
+| **Cascade Lake** | Xeon Scalable 2nd | v4 | ✓ Full | +VNNI | 2019 |
+| **Ice Lake** | Core i 10th gen (mobile) | v4 | ✓ Full | Consumer AVX-512 | 2019 |
+| **Rocket Lake** | Core i 11th gen | v4 | ✓ Full | Last consumer AVX-512 | 2021 |
+| **Alder Lake** | Core i 12th gen | v3 | ❌ Fused off | E-cores lack AVX-512 | 2021 |
+| **Raptor Lake** | Core i 13th/14th gen | v3 | ❌ Fused off | Same as Alder Lake | 2022 |
+| **Sapphire Rapids** | Xeon Scalable 4th | v4+ | ✓ Full | +AMX, +BF16, +FP16 | 2023 |
+| **Emerald Rapids** | Xeon Scalable 5th | v4+ | ✓ Full | Same as Sapphire | 2023 |
+| **Arrow Lake** | Core Ultra 200 | v3 | ❌ Disabled | E-cores still lack AVX-512 | 2024 |
+| **Granite Rapids** | Xeon 6 | v4+ | ✓ Full | +AMX-FP16 | 2024 |
+| **Panther Lake** | (upcoming) | v4? | ✓ AVX10 | AVX10.1-512, both cores | 2025 |
+
+**Key insight**: Intel consumer CPUs (Alder Lake through Arrow Lake) do NOT have AVX-512 due to E-core limitations. Only Xeon server and i9-X/Xeon W workstation have it.
+
+## x86-64 AMD CPUs
+
+| Microarch | Products | Level | AVX-512 | Notes | Year |
+|-----------|----------|-------|---------|-------|------|
+| **Bulldozer** | FX series | v2 | - | First AMD SSE4.2 | 2011 |
+| **Jaguar** | APUs, consoles | v2 | - | PS4/Xbox One | 2013 |
+| **Zen 1** | Ryzen 1000 | v3 | - | First Ryzen | 2017 |
+| **Zen+** | Ryzen 2000 | v3 | - | | 2018 |
+| **Zen 2** | Ryzen 3000, EPYC Rome | v3 | - | | 2019 |
+| **Zen 3** | Ryzen 5000, EPYC Milan | v3 | - | | 2020 |
+| **Zen 4** | Ryzen 7000, EPYC Genoa | v4 | ✓ 256b* | First AMD AVX-512 | 2022 |
+| **Zen 5** | Ryzen 9000, EPYC Turin | v4 | ✓ 256b* | +VAES, +VPCLMULQDQ | 2024 |
+
+*AMD implements AVX-512 with 256-bit execution units (double-pumped). Certain instructions may be slower than Intel's native 512-bit (e.g., vpcompressw).
+
+## x86-64 AVX-512 Subsets
+
+Not all AVX-512 CPUs have the same extensions:
+
+| Extension | Zen 4/5 | Skylake-X | Ice Lake | Sapphire+ | Purpose |
+|-----------|---------|-----------|----------|-----------|---------|
+| **F** (Foundation) | ✓ | ✓ | ✓ | ✓ | Base |
+| **CD** (Conflict Detect) | ✓ | ✓ | ✓ | ✓ | Scatter/gather |
+| **BW** (Byte/Word) | ✓ | ✓ | ✓ | ✓ | 8/16-bit ops |
+| **DQ** (Dword/Qword) | ✓ | ✓ | ✓ | ✓ | 32/64-bit ops |
+| **VL** (Vector Length) | ✓ | ✓ | ✓ | ✓ | 128/256-bit |
+| **VNNI** | ✓ | - | ✓ | ✓ | Neural network int8 |
+| **IFMA** | ✓ | - | ✓ | ✓ | Int52 multiply-add |
+| **VBMI** | ✓ | - | ✓ | ✓ | Byte permute |
+| **VBMI2** | ✓ | - | ✓ | ✓ | Compress/expand |
+| **BITALG** | ✓ | - | ✓ | ✓ | Bit manipulation |
+| **VPOPCNTDQ** | ✓ | - | ✓ | ✓ | Population count |
+| **BF16** | ✓ | - | - | ✓ | Bfloat16 (ML) |
+| **FP16** | - | - | - | ✓ | IEEE float16 |
+| **VP2INTERSECT** | - | - | - | - | Rare (Tiger Lake only) |
+
+## x86-64 Feature Availability by Year
+
+| Feature | Intel Consumer | Intel Server | AMD | Year |
+|---------|----------------|--------------|-----|------|
+| SSE4.2 | Nehalem+ | Nehalem+ | Bulldozer+ | 2008 |
+| AVX | Sandy Bridge+ | Sandy Bridge+ | Bulldozer+ | 2011 |
+| AVX2+FMA | Haswell+ | Haswell+ | Zen+ | 2013 |
+| AVX-512 base | Rocket Lake only | Skylake-X+ | Zen 4+ | 2017 |
+| AVX-512 VNNI | - | Cascade Lake+ | Zen 4+ | 2019 |
+| AVX-512 BF16 | - | Cooper Lake+ | Zen 4+ | 2020 |
+| AMX | - | Sapphire Rapids+ | - | 2023 |
+
+## x86-64 Distribution Baselines
+
+| Distribution | Baseline | Notes |
+|--------------|----------|-------|
+| Most Linux distros | v1 | Maximum compatibility |
+| RHEL 9 | v2 | 2022+ |
+| RHEL 10 | v3 | 2025+ |
+| Gentoo (optional) | v3 | User choice |
+| Clear Linux | v3+ | Performance-focused |
+| Windows 11 | v1 | But requires TPM 2.0 |
 
 ## aarch64 Server (Neoverse)
 
@@ -117,6 +204,13 @@ Based on the above data:
 
 ## Open Questions
 
+### x86-64
+1. Is v4 (AVX-512) worth a default preset? Intel consumer CPUs don't have it (Alder Lake+)
+2. Should we have a "v4-lite" for just F/CD/BW/DQ/VL without newer extensions?
+3. AMD's 256-bit AVX-512 vs Intel's 512-bit - does this affect preset design?
+4. Should we add AVX-VNNI as a separate preset for ML workloads?
+
+### aarch64
 1. Should we have an `aarch64-apple` preset separate from server? (Apple has SHA3/FCMA but not SVE)
 2. Is `aarch64-v86` (BF16+I8MM) worth a preset? It covers M2+, Oryon, newer Cortex
 3. Should baseline include DOTPROD? (Some very old ARMv8.0 chips don't have it)
@@ -124,6 +218,15 @@ Based on the above data:
 
 ## Sources
 
+### x86-64
+- [x86-64 psABI specification](https://gitlab.com/x86-psABIs/x86-64-ABI)
+- [openSUSE x86-64 microarchitecture levels](https://en.opensuse.org/X86-64_microarchitecture_levels)
+- [LLVM Zen 4 enablement](https://github.com/llvm/llvm-project/commit/1f057e365f1fdd630c023a990e84e95a6c792e4d)
+- [LLVM Zen 5 enablement](https://github.com/llvm/llvm-project/commit/149a150b50c112e26fc5acbdd58250c44ccd777f)
+- [AVX-512 Wikipedia](https://en.wikipedia.org/wiki/AVX-512)
+- [Intel Alder Lake AVX-512 status](https://www.intel.com/content/www/us/en/support/articles/000089918/processors.html)
+
+### aarch64
 - [LLVM Neoverse V1 support](https://reviews.llvm.org/D90765)
 - [LLVM Neoverse N2 commit](https://github.com/llvm/llvm-project/commit/2b6691894ab671706051a6d7ef54571546c20d3b)
 - [LLVM Neoverse V2 support](https://reviews.llvm.org/D134352)
