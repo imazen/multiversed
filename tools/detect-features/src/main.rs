@@ -41,32 +41,99 @@ mod x86_features {
     ];
     pub const AVX_FEATURES: &[&str] = &["avx", "avx2"];
     pub const AVX512_FEATURES: &[&str] = &[
-        "avx512f", "avx512cd", "avx512er", "avx512pf", "avx512bw", "avx512dq", "avx512vl",
-        "avx512ifma", "avx512vbmi", "avx512vbmi2", "avx512vpopcntdq", "avx512vnni",
-        "avx512bitalg", "avx512bf16", "avx512vp2intersect", "avx512fp16",
+        "avx512f",
+        "avx512cd",
+        "avx512er",
+        "avx512pf",
+        "avx512bw",
+        "avx512dq",
+        "avx512vl",
+        "avx512ifma",
+        "avx512vbmi",
+        "avx512vbmi2",
+        "avx512vpopcntdq",
+        "avx512vnni",
+        "avx512bitalg",
+        "avx512bf16",
+        "avx512vp2intersect",
+        "avx512fp16",
     ];
     pub const AVX_EXT_FEATURES: &[&str] = &[
-        "avxvnni", "avxvnniint8", "avxvnniint16", "avxifma", "avxneconvert",
+        "avxvnni",
+        "avxvnniint8",
+        "avxvnniint16",
+        "avxifma",
+        "avxneconvert",
     ];
     // Note: AVX10 and AMX require nightly - omitted from stable builds
     pub const SIMD_FEATURES: &[&str] = &["fma", "f16c"];
     pub const BIT_FEATURES: &[&str] = &["bmi1", "bmi2", "abm", "lzcnt", "popcnt", "tbm"];
     pub const CRYPTO_FEATURES: &[&str] = &[
-        "aes", "pclmulqdq", "sha", "sha512", "vaes", "vpclmulqdq", "gfni", "sm3", "sm4", "kl",
+        "aes",
+        "pclmulqdq",
+        "sha",
+        "sha512",
+        "vaes",
+        "vpclmulqdq",
+        "gfni",
+        "sm3",
+        "sm4",
+        "kl",
         "widekl",
     ];
     pub const STATE_FEATURES: &[&str] = &["fxsr", "xsave", "xsaveopt", "xsaves", "xsavec"];
     pub const OTHER_FEATURES: &[&str] = &[
-        "cmpxchg16b", "movbe", "adx", "rtm", "rdrand", "rdseed", "tsc", "ermsb",
+        "cmpxchg16b",
+        "movbe",
+        "adx",
+        "rtm",
+        "rdrand",
+        "rdseed",
+        "tsc",
+        "ermsb",
     ];
 
     /// Features to include in multiversion target string (most useful for SIMD)
     pub const TARGET_STRING_FEATURES: &[&str] = &[
-        "sse", "sse2", "sse3", "ssse3", "sse4.1", "sse4.2", "popcnt", "cmpxchg16b", "avx", "avx2",
-        "bmi1", "bmi2", "fma", "f16c", "lzcnt", "movbe", "fxsr", "xsave", "avx512f", "avx512bw",
-        "avx512dq", "avx512vl", "avx512cd", "avx512ifma", "avx512vbmi", "avx512vbmi2",
-        "avx512vnni", "avx512bitalg", "avx512vpopcntdq", "avx512bf16", "aes", "pclmulqdq", "sha",
-        "gfni", "vaes", "vpclmulqdq", "adx", "rdrand", "rdseed",
+        "sse",
+        "sse2",
+        "sse3",
+        "ssse3",
+        "sse4.1",
+        "sse4.2",
+        "popcnt",
+        "cmpxchg16b",
+        "avx",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "fma",
+        "f16c",
+        "lzcnt",
+        "movbe",
+        "fxsr",
+        "xsave",
+        "avx512f",
+        "avx512bw",
+        "avx512dq",
+        "avx512vl",
+        "avx512cd",
+        "avx512ifma",
+        "avx512vbmi",
+        "avx512vbmi2",
+        "avx512vnni",
+        "avx512bitalg",
+        "avx512vpopcntdq",
+        "avx512bf16",
+        "aes",
+        "pclmulqdq",
+        "sha",
+        "gfni",
+        "vaes",
+        "vpclmulqdq",
+        "adx",
+        "rdrand",
+        "rdseed",
     ];
 
     macro_rules! check {
@@ -245,12 +312,29 @@ mod aarch64_features {
     ];
     pub const FP8_FEATURES: &[&str] = &["fp8", "fp8dot2", "fp8dot4", "fp8fma", "fpmr"];
     pub const SVE_FEATURES: &[&str] = &[
-        "sve", "sve2", "sve2p1", "sve-b16b16", "sve2-aes", "sve2-sm4", "sve2-sha3", "sve2-bitperm",
-        "f32mm", "f64mm",
+        "sve",
+        "sve2",
+        "sve2p1",
+        "sve-b16b16",
+        "sve2-aes",
+        "sve2-sm4",
+        "sve2-sha3",
+        "sve2-bitperm",
+        "f32mm",
+        "f64mm",
     ];
     pub const SME_FEATURES: &[&str] = &[
-        "sme", "sme2", "sme2p1", "sme-b16b16", "sme-f16f16", "sme-f64f64", "sme-f8f16",
-        "sme-f8f32", "sme-fa64", "sme-i16i64", "sme-lutv2",
+        "sme",
+        "sme2",
+        "sme2p1",
+        "sme-b16b16",
+        "sme-f16f16",
+        "sme-f64f64",
+        "sme-f8f16",
+        "sme-f8f32",
+        "sme-fa64",
+        "sme-i16i64",
+        "sme-lutv2",
     ];
     pub const SSVE_FEATURES: &[&str] = &["ssve-fp8dot2", "ssve-fp8dot4", "ssve-fp8fma"];
     pub const CRYPTO_FEATURES: &[&str] = &["aes", "sha2", "sha3", "sm4", "pmull"];
@@ -263,10 +347,42 @@ mod aarch64_features {
     ];
 
     pub const TARGET_STRING_FEATURES: &[&str] = &[
-        "neon", "lse", "lse2", "aes", "sha2", "sha3", "sm4", "pmull", "crc", "dotprod", "fp16",
-        "fhm", "rdm", "fcma", "i8mm", "bf16", "rcpc", "rcpc2", "sve", "sve2", "sve2-aes",
-        "sve2-bitperm", "sve2-sha3", "sve2-sm4", "f32mm", "f64mm", "jsconv", "dpb", "dpb2",
-        "frintts", "flagm", "sb", "paca", "pacg", "dit", "bti",
+        "neon",
+        "lse",
+        "lse2",
+        "aes",
+        "sha2",
+        "sha3",
+        "sm4",
+        "pmull",
+        "crc",
+        "dotprod",
+        "fp16",
+        "fhm",
+        "rdm",
+        "fcma",
+        "i8mm",
+        "bf16",
+        "rcpc",
+        "rcpc2",
+        "sve",
+        "sve2",
+        "sve2-aes",
+        "sve2-bitperm",
+        "sve2-sha3",
+        "sve2-sm4",
+        "f32mm",
+        "f64mm",
+        "jsconv",
+        "dpb",
+        "dpb2",
+        "frintts",
+        "flagm",
+        "sb",
+        "paca",
+        "pacg",
+        "dit",
+        "bti",
     ];
 
     macro_rules! check {
@@ -397,20 +513,25 @@ fn detect_aarch64_features() {
 
     // Preset levels
     println!("### Preset Level Summary");
-    let has_dotprod = is_detected("dotprod") && is_detected("fp16");
-    let has_apple_m1 = has_dotprod && is_detected("sha3") && is_detected("fcma");
-    let has_sve2 = is_detected("sve2") && is_detected("i8mm") && is_detected("bf16");
+    let has_basic = is_detected("dotprod") && is_detected("fp16");
+    let has_v84 = has_basic && is_detected("sha3") && is_detected("fcma");
+    let has_sve = has_v84 && is_detected("sve") && is_detected("i8mm") && is_detected("bf16");
+    let has_sve2 = has_sve && is_detected("sve2");
 
     println!(
-        "  aarch64-dotprod (dotprod+fp16): {}",
-        if has_dotprod { "✓" } else { "✗" }
+        "  aarch64-basic (dotprod+fp16): {}",
+        if has_basic { "✓" } else { "✗" }
     );
     println!(
-        "  aarch64-apple-m1 (sha3+fcma): {}",
-        if has_apple_m1 { "✓" } else { "✗" }
+        "  aarch64-v84 (sha3+fcma): {}",
+        if has_v84 { "✓" } else { "✗" }
     );
     println!(
-        "  aarch64-sve2 (sve2+i8mm+bf16): {}",
+        "  aarch64-sve (sve+i8mm+bf16): {}",
+        if has_sve { "✓" } else { "✗" }
+    );
+    println!(
+        "  aarch64-sve2 (sve2): {}",
         if has_sve2 { "✓" } else { "✗" }
     );
     println!();

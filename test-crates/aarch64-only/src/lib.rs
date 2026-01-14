@@ -6,33 +6,39 @@
 
 use multiversed::multiversed;
 
-/// Uses all three aarch64 presets from features
+/// Uses all aarch64 presets from features
 #[multiversed]
 pub fn sum_all_aarch64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use dotprod (dotprod + fp16)
-#[multiversed("aarch64-dotprod")]
-pub fn sum_dotprod(data: &[f32]) -> f32 {
+/// Explicitly use basic (dotprod + fp16)
+#[multiversed("aarch64-basic")]
+pub fn sum_basic(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use apple-m1 (sha3 + fcma)
-#[multiversed("aarch64-apple-m1")]
-pub fn sum_apple_m1(data: &[f32]) -> f32 {
+/// Explicitly use v84 (sha3 + fcma)
+#[multiversed("aarch64-v84")]
+pub fn sum_v84(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use sve2 (SVE2 + i8mm + bf16)
+/// Explicitly use sve (SVE + i8mm + bf16, Graviton3)
+#[multiversed("aarch64-sve")]
+pub fn sum_sve(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+/// Explicitly use sve2 (SVE2 + i8mm + bf16, Graviton4)
 #[multiversed("aarch64-sve2")]
 pub fn sum_sve2(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
 /// Mix of explicit presets
-#[multiversed("aarch64-dotprod", "aarch64-sve2")]
-pub fn sum_dotprod_and_sve2(data: &[f32]) -> f32 {
+#[multiversed("aarch64-basic", "aarch64-sve2")]
+pub fn sum_basic_and_sve2(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -55,13 +61,18 @@ mod tests {
     }
 
     #[test]
-    fn test_dotprod() {
-        assert_eq!(sum_dotprod(&TEST_DATA), EXPECTED_SUM);
+    fn test_basic() {
+        assert_eq!(sum_basic(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]
-    fn test_apple_m1() {
-        assert_eq!(sum_apple_m1(&TEST_DATA), EXPECTED_SUM);
+    fn test_v84() {
+        assert_eq!(sum_v84(&TEST_DATA), EXPECTED_SUM);
+    }
+
+    #[test]
+    fn test_sve() {
+        assert_eq!(sum_sve(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]
@@ -70,8 +81,8 @@ mod tests {
     }
 
     #[test]
-    fn test_dotprod_and_sve2() {
-        assert_eq!(sum_dotprod_and_sve2(&TEST_DATA), EXPECTED_SUM);
+    fn test_basic_and_sve2() {
+        assert_eq!(sum_basic_and_sve2(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]

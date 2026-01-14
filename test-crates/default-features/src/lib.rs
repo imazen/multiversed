@@ -1,4 +1,4 @@
-//! Test crate using multiversed with default features (x86-64-v3, aarch64-baseline)
+//! Test crate using multiversed with default features (x86-64-v3, aarch64-basic)
 
 use multiversed::multiversed;
 

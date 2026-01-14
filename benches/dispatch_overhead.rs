@@ -20,9 +20,7 @@ fn sum_minimal(data: &[f32]) -> f32 {
 }
 
 /// Medium target: x86-64-v4 core (5 AVX-512 features)
-#[multiversion::multiversion(targets(
-    "x86_64+avx512f+avx512bw+avx512dq+avx512vl+avx512cd"
-))]
+#[multiversion::multiversion(targets("x86_64+avx512f+avx512bw+avx512dq+avx512vl+avx512cd"))]
 fn sum_medium(data: &[f32]) -> f32 {
     data.iter().sum()
 }

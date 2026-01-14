@@ -24,7 +24,7 @@ fn sum(data: &[f32]) -> f32 { data.iter().sum() }
 ```rust
 use multiversed::multiversed;
 
-// Use cargo feature defaults (x86-64-v3, aarch64-dotprod)
+// Use cargo feature defaults (x86-64-v3, aarch64-basic)
 #[multiversed]
 pub fn dot_product(a: &[f32], b: &[f32]) -> f32 {
     a.iter().zip(b).map(|(x, y)| x * y).sum()
@@ -36,9 +36,21 @@ pub fn optimized_sum(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
+// Multiple tiers - runtime picks best available
+#[multiversed("x86-64-v4", "x86-64-v3", "x86-64-v2")]
+pub fn tiered_dispatch(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+// Raw target strings (any string containing '+')
+#[multiversed("x86_64+avx2+fma")]
+pub fn custom_x86(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
 // Mix presets with raw target strings
-#[multiversed("x86-64-v3", "x86_64+avx2+fma+bmi2")]
-pub fn custom_targets(data: &[f32]) -> f32 {
+#[multiversed("x86-64-v3", "x86_64+avx512f+avx512vbmi2", "aarch64-basic")]
+pub fn mixed_targets(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 ```
@@ -63,19 +75,12 @@ Each preset is a complete, non-cumulative feature set based on the [x86-64 psABI
 
 | Preset | Key Features | Hardware |
 |--------|--------------|----------|
-| `aarch64-dotprod` | dotprod, fp16 | Neoverse N1, Cortex-A75+, Apple M1+, Snapdragon X |
-| `aarch64-apple-m1` | + sha3, fcma | Apple M1+, Snapdragon X, Neoverse V1+ |
+| `aarch64-basic` | dotprod, fp16 | Neoverse N1, Cortex-A75+, Apple M1+, Snapdragon X |
+| `aarch64-v84` | + sha3, fcma | Apple M1+, Snapdragon X, Neoverse V1+ |
+| `aarch64-sve` | + SVE, i8mm, bf16 | Neoverse V1 (Graviton3) |
 | `aarch64-sve2` | + SVE2, i8mm, bf16 | Neoverse N2/V2+ (Graviton4, Grace, Axion) |
 
 > **Note**: SVE/SVE2 is **server-only** (Neoverse). Apple Silicon, Qualcomm Oryon, and Cortex-A/X mobile cores do not implement SVE.
-
-### Planned Presets
-
-| Preset | Key Features | Hardware | Status |
-|--------|--------------|----------|--------|
-| `aarch64-sve` | SVE, i8mm, bf16 | Neoverse V1 (Graviton3) | Planned |
-
-Graviton3 (Neoverse V1) has SVE but **not** SVE2. The `aarch64-sve` preset will target this gap.
 
 ## Dispatch Overhead
 
@@ -93,7 +98,7 @@ The ~0.3ns difference is the indirect call cost. Feature checking happens at com
 ## Cargo Features
 
 ```toml
-# Default: x86-64-v3 + aarch64-dotprod
+# Default: x86-64-v3 + aarch64-basic
 multiversed = "0.1"
 
 # Server-focused (AVX-512 + SVE2)

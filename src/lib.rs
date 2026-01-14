@@ -8,7 +8,7 @@
 //! ```ignore
 //! use multiversed::multiversed;
 //!
-//! // Use targets from enabled cargo features (default: x86-64-v3, aarch64-dotprod)
+//! // Use targets from enabled cargo features (default: x86-64-v3, aarch64-basic)
 //! #[multiversed]
 //! pub fn dot_product(a: &[f32], b: &[f32]) -> f32 {
 //!     a.iter().zip(b).map(|(x, y)| x * y).sum()
@@ -50,8 +50,9 @@
 //!
 //! | Feature | Key Features | Hardware |
 //! |---------|--------------|----------|
-//! | `aarch64-dotprod` | dotprod, fp16 | Neoverse N1, Cortex-A75+, Apple M1+, Oryon |
-//! | `aarch64-apple-m1` | + sha3, fcma | Apple M1+, Snapdragon X, Neoverse V1+ |
+//! | `aarch64-basic` | dotprod, fp16 | Neoverse N1, Cortex-A75+, Apple M1+, Oryon |
+//! | `aarch64-v84` | + sha3, fcma | Apple M1+, Snapdragon X, Neoverse V1+ |
+//! | `aarch64-sve` | + SVE, i8mm, bf16 | Neoverse V1 (Graviton3) |
 //! | `aarch64-sve2` | + SVE2, i8mm, bf16 | Neoverse N2/V2+ (Graviton4) |
 //!
 //! **Note**: SVE/SVE2 is server-only (Neoverse). Apple Silicon, Qualcomm Oryon, and
@@ -61,7 +62,7 @@
 //!
 //! The `#[multiversed]` attribute accepts:
 //! - **No arguments**: Uses targets from enabled cargo features
-//! - **Preset names**: `"x86-64-v3"`, `"aarch64-dotprod"`, etc.
+//! - **Preset names**: `"x86-64-v3"`, `"aarch64-basic"`, etc.
 //! - **Raw target strings**: Any string containing `+` is passed through as-is
 //!
 //! Multiple arguments are comma-separated and all are included in the target list.
@@ -88,14 +89,17 @@ const X86_64_V3: &str =
 const X86_64_V4: &str =
     "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+bmi1+bmi2+f16c+fma+lzcnt+movbe+xsave+fxsr+avx512f+avx512bw+avx512dq+avx512vl+avx512cd+gfni+vaes+vpclmulqdq";
 
-// aarch64 dotprod: +dotprod +fp16 (Cortex-A75 2017+, Apple A11+)
-const AARCH64_DOTPROD: &str = "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+fhm";
+// aarch64-basic: dotprod + fp16 (Neoverse N1, Cortex-A75+, Apple M1+, Snapdragon X)
+const AARCH64_BASIC: &str = "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+fhm";
 
-// aarch64 apple-m1: +sha3 +fcma (Cortex-A76 2018+, Apple M1+)
-const AARCH64_APPLE_M1: &str = "aarch64+neon+lse+aes+sha2+sha3+crc+dotprod+rcpc+fp16+fhm+fcma";
+// aarch64-v84: +sha3 +fcma (Apple M1+, Snapdragon X, Neoverse V1+)
+const AARCH64_V84: &str = "aarch64+neon+lse+aes+sha2+sha3+crc+dotprod+rcpc+fp16+fhm+fcma";
 
-// aarch64 SVE2: +SVE2 +i8mm +bf16 (Neoverse N2 2022+, V2 2023+)
-// Note: V1 (Graviton3) has SVE but NOT SVE2
+// aarch64-sve: SVE + i8mm + bf16 (Neoverse V1 / Graviton3 only - has SVE but NOT SVE2)
+const AARCH64_SVE: &str =
+    "aarch64+neon+lse+aes+sha2+sha3+crc+dotprod+rcpc+fp16+fhm+fcma+sve+i8mm+bf16";
+
+// aarch64-sve2: SVE2 + i8mm + bf16 (Neoverse N2 2022+, V2 2023+ / Graviton4+)
 const AARCH64_SVE2: &str =
     "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+fhm+sve2+sve2-bitperm+i8mm+bf16";
 
@@ -110,13 +114,14 @@ const AARCH64_SVE2: &str =
 /// Resolve a preset name to its target string, or return the input as-is if it's a raw target.
 fn resolve_target(s: &str) -> Option<&str> {
     match s {
-        // x86 presets
+        // x86 presets (psABI standard)
         "x86-64-v2" => Some(X86_64_V2),
         "x86-64-v3" => Some(X86_64_V3),
         "x86-64-v4" => Some(X86_64_V4),
-        // aarch64 presets (above baseline - NEON is implicit)
-        "aarch64-dotprod" => Some(AARCH64_DOTPROD),
-        "aarch64-apple-m1" => Some(AARCH64_APPLE_M1),
+        // aarch64 presets
+        "aarch64-basic" => Some(AARCH64_BASIC),
+        "aarch64-v84" => Some(AARCH64_V84),
+        "aarch64-sve" => Some(AARCH64_SVE),
         "aarch64-sve2" => Some(AARCH64_SVE2),
         // wasm32 - multiversion doesn't support it, ignore
         "wasm32-simd128" => None,
@@ -192,11 +197,14 @@ fn default_aarch64_targets() -> Vec<&'static str> {
     #[cfg(feature = "aarch64-sve2")]
     targets.push(AARCH64_SVE2);
 
-    #[cfg(feature = "aarch64-apple-m1")]
-    targets.push(AARCH64_APPLE_M1);
+    #[cfg(feature = "aarch64-sve")]
+    targets.push(AARCH64_SVE);
 
-    #[cfg(feature = "aarch64-dotprod")]
-    targets.push(AARCH64_DOTPROD);
+    #[cfg(feature = "aarch64-v84")]
+    targets.push(AARCH64_V84);
+
+    #[cfg(feature = "aarch64-basic")]
+    targets.push(AARCH64_BASIC);
 
     targets
 }
@@ -234,7 +242,7 @@ fn default_aarch64_targets() -> Vec<&'static str> {
 /// # Arguments
 ///
 /// - **No arguments**: Uses targets from enabled cargo features
-/// - **Preset names**: `"x86-64-v3"`, `"aarch64-baseline"`, etc.
+/// - **Preset names**: `"x86-64-v3"`, `"aarch64-basic"`, etc.
 /// - **Raw target strings**: Any string with `+` is passed through to multiversion
 #[proc_macro_attribute]
 pub fn multiversed(attr: TokenStream, item: TokenStream) -> TokenStream {

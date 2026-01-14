@@ -186,35 +186,10 @@ Based on the above data:
 
 | Preset | Key Features | Target Hardware |
 |--------|--------------|-----------------|
-| `aarch64-baseline` | NEON, DOTPROD, FP16 | All 2017+ (N1, A75+, M1+, Oryon) |
+| `aarch64-basic` | DOTPROD, FP16 | N1, A75+, M1+, Oryon (2017+) |
 | `aarch64-v84` | + SHA3, FCMA | M1+, Oryon, V1+ (2020+) |
-| `aarch64-v86` | + BF16, I8MM | M2+, Oryon, V1, N2+, A710+ (2021+) |
-| `aarch64-sve` | + SVE (no SVE2) | Graviton3 (V1) only |
-| `aarch64-sve2` | + SVE2 | N2, V2+, (M4 not exposed) |
-
-### Alternative naming (more intuitive?)
-
-| Preset | Key Features | Target Hardware |
-|--------|--------------|-----------------|
-| `aarch64-2017` | DOTPROD, FP16 | N1, A75+, M1 |
-| `aarch64-2020` | + SHA3, FCMA | M1+, Oryon, V1+ |
-| `aarch64-2022` | + BF16, I8MM | M2+, Oryon, V1, N2+, A710+ |
-| `aarch64-sve` | + SVE | Graviton3 |
-| `aarch64-sve2` | + SVE2 | Graviton4+, (M4) |
-
-## Open Questions
-
-### x86-64
-1. Is v4 (AVX-512) worth a default preset? Intel consumer CPUs don't have it (Alder Lake+)
-2. Should we have a "v4-lite" for just F/CD/BW/DQ/VL without newer extensions?
-3. AMD's 256-bit AVX-512 vs Intel's 512-bit - does this affect preset design?
-4. Should we add AVX-VNNI as a separate preset for ML workloads?
-
-### aarch64
-1. Should we have an `aarch64-apple` preset separate from server? (Apple has SHA3/FCMA but not SVE)
-2. Is `aarch64-v86` (BF16+I8MM) worth a preset? It covers M2+, Oryon, newer Cortex
-3. Should baseline include DOTPROD? (Some very old ARMv8.0 chips don't have it)
-4. How to handle M4's SME vs server SVE2 - different vector approaches
+| `aarch64-sve` | + SVE, I8MM, BF16 | Graviton3 (V1) only |
+| `aarch64-sve2` | + SVE2 | N2, V2+ (Graviton4+) |
 
 ## Sources
 

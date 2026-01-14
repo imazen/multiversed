@@ -17,7 +17,7 @@ syn = { version = "2.0", features = ["full", "parsing"] }
 proc-macro2 = "1.0"
 
 [features]
-default = ["x86-64-v3", "aarch64-dotprod"]
+default = ["x86-64-v3", "aarch64-basic"]
 
 # Disable all multiversioning (passthrough only, useful for debugging/faster builds)
 force-disable = []
@@ -39,13 +39,16 @@ x86-64-v4 = []
 # aarch64 presets (above baseline - NEON is implicit)
 # ============================================================================
 
-# aarch64-dotprod: dotprod + fp16 (Cortex-A75 2017+, Apple A11+) - RECOMMENDED
-aarch64-dotprod = []
+# aarch64-basic: dotprod + fp16 (Cortex-A75+, Apple M1+, Neoverse N1) - RECOMMENDED
+aarch64-basic = []
 
-# aarch64-apple-m1: sha3 + fcma (Cortex-A76 2018+, Apple M1+)
-aarch64-apple-m1 = []
+# aarch64-v84: + sha3 + fcma (Cortex-A76+, Apple M1+, Snapdragon X, Neoverse V1+)
+aarch64-v84 = []
 
-# aarch64-sve2: SVE2 + i8mm + bf16 (Neoverse V1 2020+, Apple M4 2024+)
+# aarch64-sve: SVE + i8mm + bf16 (Neoverse V1 / Graviton3 only)
+aarch64-sve = []
+
+# aarch64-sve2: SVE2 + i8mm + bf16 (Neoverse N2/V2+ / Graviton4+)
 aarch64-sve2 = []
 
 [dev-dependencies]
