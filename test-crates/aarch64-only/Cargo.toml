@@ -1,0 +1,14 @@
+[package]
+name = "test-aarch64-only"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+multiversed = { path = "../..", default-features = false, features = [
+    "aarch64-baseline",
+    "aarch64-dotprod",
+    "aarch64-crypto-ext",
+    "aarch64-sve2",
+] }
+multiversion = "0.8"

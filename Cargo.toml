@@ -61,5 +61,16 @@ wasm32-simd128 = []
 [dev-dependencies]
 multiversion = "0.8"
 
+[workspace]
+members = [
+    ".",
+    "test-crates/default-features",
+    "test-crates/all-features",
+    "test-crates/no-features",
+    "test-crates/force-disable",
+    "test-crates/x86-only",
+    "test-crates/aarch64-only",
+]
+
 [package.metadata.docs.rs]
 all-features = true

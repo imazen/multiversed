@@ -1,0 +1,13 @@
+[package]
+name = "test-x86-only"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+multiversed = { path = "../..", default-features = false, features = [
+    "x86-64-v2",
+    "x86-64-v3",
+    "x86-64-v4",
+] }
+multiversion = "0.8"
