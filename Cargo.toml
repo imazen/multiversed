@@ -1,0 +1,68 @@
+[package]
+name = "multiversed"
+version = "0.1.0"
+edition = "2021"
+description = "Attribute macros wrapping multiversion with predefined SIMD target presets"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/imazen/multiversed"
+keywords = ["simd", "multiversion", "avx2", "neon", "performance"]
+categories = ["development-tools::procedural-macro-helpers", "hardware-support"]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
+proc-macro2 = "1.0"
+
+[features]
+default = ["x86-v3", "aarch64-baseline"]
+
+# ============================================================================
+# x86/x86_64 target tiers (additive)
+# ============================================================================
+
+# x86-64-v2: SSE4.2 + POPCNT (Nehalem 2008+, most CPUs since ~2010)
+x86-v2 = []
+
+# x86-64-v3: AVX2 + FMA + BMI (Haswell 2013+, Zen 2 2019+) - RECOMMENDED
+x86-v3 = ["x86-v2"]
+
+# x86-64-v4: AVX-512 (Skylake-X 2017+, Zen 4 2022+)
+x86-v4 = ["x86-v3"]
+
+# ============================================================================
+# aarch64 target tiers (additive)
+# ============================================================================
+
+# Baseline NEON + crypto (all ARM64)
+aarch64-baseline = []
+
+# dotprod + fp16 (Cortex-A75 2017+, Apple A11+)
+aarch64-dotprod = ["aarch64-baseline"]
+
+# sha3 + fcma (Cortex-A76 2018+, Apple M1+)
+aarch64-crypto-ext = ["aarch64-dotprod"]
+
+# SVE2 + i8mm + bf16 (Neoverse V1 2020+, Apple M4 2024+)
+aarch64-sve2 = ["aarch64-crypto-ext"]
+
+# ============================================================================
+# Preset bundles
+# ============================================================================
+
+# Conservative: Only widely-supported targets
+conservative = ["x86-v3", "aarch64-baseline"]
+
+# Extended: Good coverage of modern hardware
+extended = ["x86-v4", "aarch64-dotprod"]
+
+# Full: All supported targets (slower compile, best runtime coverage)
+full = ["x86-v4", "aarch64-sve2"]
+
+[dev-dependencies]
+multiversion = "0.8"
+
+[package.metadata.docs.rs]
+all-features = true
