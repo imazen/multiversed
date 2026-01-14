@@ -60,6 +60,7 @@ members = [
     "test-crates/force-disable",
     "test-crates/x86-only",
     "test-crates/aarch64-only",
+    "tools/detect-features",
 ]
 
 [package.metadata.docs.rs]

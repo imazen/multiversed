@@ -1,0 +1,110 @@
+name: Detect CPU Features
+
+on:
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 0 1 * *'  # Monthly on the 1st
+
+jobs:
+  detect-features:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # x86_64 runners
+          - os: ubuntu-latest
+            name: Linux x86_64
+          - os: windows-latest
+            name: Windows x86_64
+          - os: macos-13
+            name: macOS x86_64 (Intel)
+
+          # aarch64 runners
+          - os: ubuntu-24.04-arm
+            name: Linux aarch64
+          - os: windows-11-arm
+            name: Windows aarch64
+          - os: macos-latest
+            name: macOS aarch64 (Apple Silicon)
+
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build detect-features
+        run: cargo build --release -p detect-features
+
+      - name: Run feature detection
+        run: cargo run --release -p detect-features
+
+      - name: Save report as artifact
+        shell: bash
+        run: |
+          mkdir -p reports
+          cargo run --release -p detect-features > reports/${{ matrix.name }}.txt 2>&1
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: feature-report-${{ matrix.name }}
+          path: reports/
+
+  # wasm32 compile-time check (no runtime detection possible)
+  wasm-features:
+    name: wasm32 (compile-time)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Build for wasm32 (no SIMD)
+        run: cargo build --release -p detect-features --target wasm32-unknown-unknown
+
+      - name: Build for wasm32 (with simd128)
+        run: |
+          RUSTFLAGS="-C target-feature=+simd128" cargo build --release -p detect-features --target wasm32-unknown-unknown
+
+  # Aggregate reports into summary
+  summary:
+    name: Generate Summary
+    runs-on: ubuntu-latest
+    needs: [detect-features]
+    steps:
+      - name: Download all reports
+        uses: actions/download-artifact@v5
+        with:
+          path: all-reports
+          pattern: feature-report-*
+          merge-multiple: true
+
+      - name: Display combined report
+        run: |
+          echo "# CPU Feature Detection Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Generated on: $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          for f in all-reports/*.txt; do
+            if [ -f "$f" ]; then
+              name=$(basename "$f" .txt)
+              echo "## $name" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              cat "$f" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+      - name: Upload combined report
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-feature-reports
+          path: all-reports/

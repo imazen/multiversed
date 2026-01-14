@@ -233,6 +233,7 @@ pub fn multiversed(attr: TokenStream, item: TokenStream) -> TokenStream {
     #[cfg(feature = "force-disable")]
     {
         let _ = attr; // suppress unused warning
+        #[allow(clippy::needless_return)]
         return quote! { #func }.into();
     }
 

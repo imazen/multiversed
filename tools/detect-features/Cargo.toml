@@ -1,0 +1,9 @@
+[package]
+name = "detect-features"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[[bin]]
+name = "detect-features"
+path = "src/main.rs"
