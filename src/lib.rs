@@ -92,24 +92,32 @@ const AARCH64_CRYPTO_EXT: &str = "aarch64+neon+lse+aes+sha2+sha3+crc+dotprod+rcp
 const AARCH64_SVE2: &str =
     "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+fhm+sve2+sve2-bitperm+i8mm+bf16";
 
+// Note: wasm32 has no runtime feature detection and multiversion doesn't support it.
+// The wasm32-simd128 feature exists for documentation but generates no multiversion code.
+// Users must compile with -C target-feature=+simd128 for SIMD on wasm32.
+
 // ============================================================================
 // Preset name resolution
 // ============================================================================
 
 /// Resolve a preset name to its target string, or return the input as-is if it's a raw target.
-fn resolve_target(s: &str) -> &str {
+fn resolve_target(s: &str) -> Option<&str> {
     match s {
         // x86 presets
-        "x86-64-v2" => X86_64_V2,
-        "x86-64-v3" => X86_64_V3,
-        "x86-64-v4" => X86_64_V4,
+        "x86-64-v2" => Some(X86_64_V2),
+        "x86-64-v3" => Some(X86_64_V3),
+        "x86-64-v4" => Some(X86_64_V4),
         // aarch64 presets
-        "aarch64-baseline" => AARCH64_BASELINE,
-        "aarch64-dotprod" => AARCH64_DOTPROD,
-        "aarch64-crypto-ext" => AARCH64_CRYPTO_EXT,
-        "aarch64-sve2" => AARCH64_SVE2,
-        // Raw target string (contains +, pass through as-is)
-        _ => s,
+        "aarch64-baseline" => Some(AARCH64_BASELINE),
+        "aarch64-dotprod" => Some(AARCH64_DOTPROD),
+        "aarch64-crypto-ext" => Some(AARCH64_CRYPTO_EXT),
+        "aarch64-sve2" => Some(AARCH64_SVE2),
+        // wasm32 - multiversion doesn't support it, ignore
+        "wasm32-simd128" => None,
+        // Raw target string - pass through if it looks like a valid target
+        s if s.contains('+') && !s.starts_with("wasm32") => Some(s),
+        // Unknown or wasm32 raw target - ignore
+        _ => None,
     }
 }
 
@@ -245,7 +253,7 @@ pub fn multiversed(attr: TokenStream, item: TokenStream) -> TokenStream {
 
 fn multiversed_impl(args: MultiversedArgs, func: ItemFn) -> TokenStream {
     // Collect targets, separating by architecture
-    let (x86_targets, aarch64_targets): (Vec<String>, Vec<String>) = if args.targets.is_empty() {
+    let (x86_targets, aarch64_targets) = if args.targets.is_empty() {
         // No explicit targets - use cargo feature defaults
         let x86: Vec<String> = default_x86_targets()
             .into_iter()
@@ -258,10 +266,11 @@ fn multiversed_impl(args: MultiversedArgs, func: ItemFn) -> TokenStream {
         (x86, aarch64)
     } else {
         // Explicit targets - resolve presets and partition by architecture
+        // Note: wasm32 targets are filtered out (multiversion doesn't support wasm32)
         let resolved: Vec<String> = args
             .targets
             .iter()
-            .map(|s| resolve_target(s).to_string())
+            .filter_map(|s| resolve_target(s).map(String::from))
             .collect();
 
         let x86: Vec<String> = resolved
@@ -278,47 +287,33 @@ fn multiversed_impl(args: MultiversedArgs, func: ItemFn) -> TokenStream {
         (x86, aarch64)
     };
 
-    // Generate output based on which architectures have targets
-    let output = match (x86_targets.is_empty(), aarch64_targets.is_empty()) {
-        (true, true) => {
-            // No targets - passthrough without multiversion
-            quote! { #func }
-        }
-        (false, true) => {
-            // x86 only
-            quote! {
-                #[cfg_attr(
-                    any(target_arch = "x86", target_arch = "x86_64"),
-                    multiversion::multiversion(targets(#(#x86_targets),*))
-                )]
-                #func
-            }
-        }
-        (true, false) => {
-            // aarch64 only
-            quote! {
-                #[cfg_attr(
-                    target_arch = "aarch64",
-                    multiversion::multiversion(targets(#(#aarch64_targets),*))
-                )]
-                #func
-            }
-        }
-        (false, false) => {
-            // Both architectures
-            quote! {
-                #[cfg_attr(
-                    any(target_arch = "x86", target_arch = "x86_64"),
-                    multiversion::multiversion(targets(#(#x86_targets),*))
-                )]
-                #[cfg_attr(
-                    target_arch = "aarch64",
-                    multiversion::multiversion(targets(#(#aarch64_targets),*))
-                )]
-                #func
-            }
+    // Build cfg_attr for each architecture that has targets
+    let x86_attr = if x86_targets.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            #[cfg_attr(
+                any(target_arch = "x86", target_arch = "x86_64"),
+                multiversion::multiversion(targets(#(#x86_targets),*))
+            )]
         }
     };
 
-    output.into()
+    let aarch64_attr = if aarch64_targets.is_empty() {
+        quote! {}
+    } else {
+        quote! {
+            #[cfg_attr(
+                target_arch = "aarch64",
+                multiversion::multiversion(targets(#(#aarch64_targets),*))
+            )]
+        }
+    };
+
+    quote! {
+        #x86_attr
+        #aarch64_attr
+        #func
+    }
+    .into()
 }

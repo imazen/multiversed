@@ -20,26 +20,50 @@ pub fn public_sum(data: &[f32]) -> f32 {
 }
 
 // ============================================================================
-// Explicit preset selection
+// Explicit x86 preset selection
 // ============================================================================
 
+#[multiversed("x86-64-v2")]
+fn sum_x86_v2(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
 #[multiversed("x86-64-v3")]
-fn sum_x86_v3_only(data: &[f32]) -> f32 {
+fn sum_x86_v3(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-#[multiversed("aarch64-baseline")]
-fn sum_aarch64_only(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
-
-#[multiversed("x86-64-v4", "aarch64-sve2")]
-fn sum_high_tier(data: &[f32]) -> f32 {
+#[multiversed("x86-64-v4")]
+fn sum_x86_v4(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
 #[multiversed("x86-64-v3", "x86-64-v4")]
 fn sum_multi_x86(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+// ============================================================================
+// Explicit aarch64 preset selection
+// ============================================================================
+
+#[multiversed("aarch64-baseline")]
+fn sum_aarch64_baseline(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+#[multiversed("aarch64-dotprod")]
+fn sum_aarch64_dotprod(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+#[multiversed("aarch64-crypto-ext")]
+fn sum_aarch64_crypto_ext(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+#[multiversed("aarch64-sve2")]
+fn sum_aarch64_sve2(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -49,11 +73,41 @@ fn sum_multi_aarch64(data: &[f32]) -> f32 {
 }
 
 // ============================================================================
+// wasm32 preset (ignored by multiversion, just passthrough)
+// ============================================================================
+
+// wasm32-simd128 is silently ignored since multiversion doesn't support wasm32
+#[multiversed("wasm32-simd128")]
+fn sum_wasm_simd128(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+// ============================================================================
+// Cross-architecture combinations
+// ============================================================================
+
+#[multiversed("x86-64-v4", "aarch64-sve2")]
+fn sum_high_tier(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+// wasm32-simd128 is silently filtered out
+#[multiversed("x86-64-v3", "aarch64-baseline", "wasm32-simd128")]
+fn sum_all_archs(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+// ============================================================================
 // Mixed presets and raw target strings
 // ============================================================================
 
 #[multiversed("x86-64-v3", "x86_64+avx2+fma")]
 fn sum_mixed_x86(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+#[multiversed("aarch64-baseline", "aarch64+neon")]
+fn sum_mixed_aarch64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -72,8 +126,30 @@ fn max_f32(data: &[f32]) -> Option<f32> {
 }
 
 #[multiversed]
+fn min_f32(data: &[f32]) -> Option<f32> {
+    data.iter().copied().reduce(f32::min)
+}
+
+#[multiversed]
 fn sum_generic<T: std::iter::Sum + Copy>(data: &[T]) -> T {
     data.iter().copied().sum()
+}
+
+#[multiversed]
+fn mean_f32(data: &[f32]) -> f32 {
+    if data.is_empty() {
+        return 0.0;
+    }
+    data.iter().sum::<f32>() / data.len() as f32
+}
+
+#[multiversed]
+fn variance_f32(data: &[f32]) -> f32 {
+    if data.is_empty() {
+        return 0.0;
+    }
+    let mean = data.iter().sum::<f32>() / data.len() as f32;
+    data.iter().map(|x| (x - mean).powi(2)).sum::<f32>() / data.len() as f32
 }
 
 // ============================================================================
@@ -95,45 +171,42 @@ fn test_public_sum() {
 }
 
 #[test]
-fn test_x86_v3_only() {
+fn test_x86_presets() {
     let data = [1.0f32, 2.0, 3.0, 4.0];
-    let result = sum_x86_v3_only(&data);
-    assert!((result - 10.0).abs() < 0.001);
+    assert!((sum_x86_v2(&data) - 10.0).abs() < 0.001);
+    assert!((sum_x86_v3(&data) - 10.0).abs() < 0.001);
+    assert!((sum_x86_v4(&data) - 10.0).abs() < 0.001);
+    assert!((sum_multi_x86(&data) - 10.0).abs() < 0.001);
 }
 
 #[test]
-fn test_aarch64_only() {
+fn test_aarch64_presets() {
     let data = [1.0f32, 2.0, 3.0, 4.0];
-    let result = sum_aarch64_only(&data);
-    assert!((result - 10.0).abs() < 0.001);
+    assert!((sum_aarch64_baseline(&data) - 10.0).abs() < 0.001);
+    assert!((sum_aarch64_dotprod(&data) - 10.0).abs() < 0.001);
+    assert!((sum_aarch64_crypto_ext(&data) - 10.0).abs() < 0.001);
+    assert!((sum_aarch64_sve2(&data) - 10.0).abs() < 0.001);
+    assert!((sum_multi_aarch64(&data) - 10.0).abs() < 0.001);
 }
 
 #[test]
-fn test_high_tier() {
+fn test_wasm_preset() {
     let data = [1.0f32, 2.0, 3.0, 4.0];
-    let result = sum_high_tier(&data);
-    assert!((result - 10.0).abs() < 0.001);
+    assert!((sum_wasm_simd128(&data) - 10.0).abs() < 0.001);
 }
 
 #[test]
-fn test_multi_x86() {
+fn test_cross_arch() {
     let data = [1.0f32, 2.0, 3.0, 4.0];
-    let result = sum_multi_x86(&data);
-    assert!((result - 10.0).abs() < 0.001);
+    assert!((sum_high_tier(&data) - 10.0).abs() < 0.001);
+    assert!((sum_all_archs(&data) - 10.0).abs() < 0.001);
 }
 
 #[test]
-fn test_multi_aarch64() {
+fn test_mixed_targets() {
     let data = [1.0f32, 2.0, 3.0, 4.0];
-    let result = sum_multi_aarch64(&data);
-    assert!((result - 10.0).abs() < 0.001);
-}
-
-#[test]
-fn test_mixed_x86() {
-    let data = [1.0f32, 2.0, 3.0, 4.0];
-    let result = sum_mixed_x86(&data);
-    assert!((result - 10.0).abs() < 0.001);
+    assert!((sum_mixed_x86(&data) - 10.0).abs() < 0.001);
+    assert!((sum_mixed_aarch64(&data) - 10.0).abs() < 0.001);
 }
 
 #[test]
@@ -150,6 +223,13 @@ fn test_max() {
     let data = [1.0f32, 5.0, 3.0, 7.0, 2.0];
     let result = max_f32(&data);
     assert_eq!(result, Some(7.0));
+}
+
+#[test]
+fn test_min() {
+    let data = [1.0f32, 5.0, 3.0, 7.0, 2.0];
+    let result = min_f32(&data);
+    assert_eq!(result, Some(1.0));
 }
 
 #[test]
@@ -171,6 +251,28 @@ fn test_generic_sum_i32() {
     let data = [1i32, 2, 3, 4, 5];
     let result: i32 = sum_generic(&data);
     assert_eq!(result, 15);
+}
+
+#[test]
+fn test_mean() {
+    let data = [1.0f32, 2.0, 3.0, 4.0, 5.0];
+    let result = mean_f32(&data);
+    assert!((result - 3.0).abs() < 0.001);
+}
+
+#[test]
+fn test_mean_empty() {
+    let data: [f32; 0] = [];
+    let result = mean_f32(&data);
+    assert!((result - 0.0).abs() < 0.001);
+}
+
+#[test]
+fn test_variance() {
+    let data = [2.0f32, 4.0, 4.0, 4.0, 5.0, 5.0, 7.0, 9.0];
+    let result = variance_f32(&data);
+    // Mean = 5, Variance = 4
+    assert!((result - 4.0).abs() < 0.001);
 }
 
 #[test]

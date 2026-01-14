@@ -47,6 +47,26 @@ Each feature is a complete, non-cumulative preset. Enable the ones you want.
 | `aarch64-crypto-ext` | +sha3 +fcma | Cortex-A76 2018+, Apple M1+ |
 | `aarch64-sve2` | +SVE2 +i8mm +bf16 | Neoverse V1 2020+, Apple M4 2024+ |
 
+### wasm32
+
+**Note:** The `multiversion` crate does not support wasm32. The `wasm32-simd128` preset
+is accepted but silently ignored (the function compiles as a normal function).
+
+For wasm32 SIMD, compile directly with the target feature:
+
+```bash
+RUSTFLAGS="-C target-feature=+simd128" cargo build --target wasm32-unknown-unknown
+```
+
+Or in `.cargo/config.toml`:
+```toml
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "target-feature=+simd128"]
+```
+
+WebAssembly has no runtime CPU feature detection, so SIMD support must be
+determined at compile time.
+
 ### Special Features
 
 | Feature | Description |
