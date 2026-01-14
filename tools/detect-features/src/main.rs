@@ -1,6 +1,7 @@
 //! Runtime CPU feature detection tool
 //!
 //! Prints all detectable CPU features and their availability on the current system.
+//! Also generates multiversion-compatible target strings for the current CPU.
 //! Used by CI to document what features are available on GitHub Actions runners.
 
 fn main() {
@@ -136,17 +137,177 @@ fn detect_x86_features() {
     );
     println!("  x86-64-v4 (AVX-512): {}", if has_v4 { "✓" } else { "✗" });
     println!();
+
+    // Generate multiversion target string
+    println!("### Multiversion Target String");
+    let target_string = compose_x86_target_string();
+    println!();
+    println!("  {}", target_string);
+    println!();
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+fn compose_x86_target_string() -> String {
+    use std::arch::is_x86_feature_detected;
+
+    let mut features = Vec::new();
+
+    // Base architecture
+    #[cfg(target_arch = "x86_64")]
+    features.push("x86_64");
+    #[cfg(target_arch = "x86")]
+    features.push("x86");
+
+    // Collect all detected features in a sensible order
+    // SSE family
+    if is_x86_feature_detected!("sse") {
+        features.push("sse");
+    }
+    if is_x86_feature_detected!("sse2") {
+        features.push("sse2");
+    }
+    if is_x86_feature_detected!("sse3") {
+        features.push("sse3");
+    }
+    if is_x86_feature_detected!("ssse3") {
+        features.push("ssse3");
+    }
+    if is_x86_feature_detected!("sse4.1") {
+        features.push("sse4.1");
+    }
+    if is_x86_feature_detected!("sse4.2") {
+        features.push("sse4.2");
+    }
+
+    // Core features
+    if is_x86_feature_detected!("popcnt") {
+        features.push("popcnt");
+    }
+    if is_x86_feature_detected!("cmpxchg16b") {
+        features.push("cmpxchg16b");
+    }
+
+    // AVX family
+    if is_x86_feature_detected!("avx") {
+        features.push("avx");
+    }
+    if is_x86_feature_detected!("avx2") {
+        features.push("avx2");
+    }
+
+    // BMI
+    if is_x86_feature_detected!("bmi1") {
+        features.push("bmi1");
+    }
+    if is_x86_feature_detected!("bmi2") {
+        features.push("bmi2");
+    }
+
+    // FMA and related
+    if is_x86_feature_detected!("fma") {
+        features.push("fma");
+    }
+    if is_x86_feature_detected!("f16c") {
+        features.push("f16c");
+    }
+    if is_x86_feature_detected!("lzcnt") {
+        features.push("lzcnt");
+    }
+    if is_x86_feature_detected!("movbe") {
+        features.push("movbe");
+    }
+
+    // Save/restore
+    if is_x86_feature_detected!("fxsr") {
+        features.push("fxsr");
+    }
+    if is_x86_feature_detected!("xsave") {
+        features.push("xsave");
+    }
+
+    // AVX-512 family
+    if is_x86_feature_detected!("avx512f") {
+        features.push("avx512f");
+    }
+    if is_x86_feature_detected!("avx512bw") {
+        features.push("avx512bw");
+    }
+    if is_x86_feature_detected!("avx512dq") {
+        features.push("avx512dq");
+    }
+    if is_x86_feature_detected!("avx512vl") {
+        features.push("avx512vl");
+    }
+    if is_x86_feature_detected!("avx512cd") {
+        features.push("avx512cd");
+    }
+    if is_x86_feature_detected!("avx512ifma") {
+        features.push("avx512ifma");
+    }
+    if is_x86_feature_detected!("avx512vbmi") {
+        features.push("avx512vbmi");
+    }
+    if is_x86_feature_detected!("avx512vbmi2") {
+        features.push("avx512vbmi2");
+    }
+    if is_x86_feature_detected!("avx512vnni") {
+        features.push("avx512vnni");
+    }
+    if is_x86_feature_detected!("avx512bitalg") {
+        features.push("avx512bitalg");
+    }
+    if is_x86_feature_detected!("avx512vpopcntdq") {
+        features.push("avx512vpopcntdq");
+    }
+    if is_x86_feature_detected!("avx512bf16") {
+        features.push("avx512bf16");
+    }
+
+    // Crypto
+    if is_x86_feature_detected!("aes") {
+        features.push("aes");
+    }
+    if is_x86_feature_detected!("pclmulqdq") {
+        features.push("pclmulqdq");
+    }
+    if is_x86_feature_detected!("sha") {
+        features.push("sha");
+    }
+    if is_x86_feature_detected!("gfni") {
+        features.push("gfni");
+    }
+    if is_x86_feature_detected!("vaes") {
+        features.push("vaes");
+    }
+    if is_x86_feature_detected!("vpclmulqdq") {
+        features.push("vpclmulqdq");
+    }
+
+    // Other useful features
+    if is_x86_feature_detected!("adx") {
+        features.push("adx");
+    }
+    if is_x86_feature_detected!("rdrand") {
+        features.push("rdrand");
+    }
+    if is_x86_feature_detected!("rdseed") {
+        features.push("rdseed");
+    }
+
+    features.join("+")
 }
 
 #[cfg(target_arch = "aarch64")]
 fn detect_aarch64_features() {
+    use std::arch::is_aarch64_feature_detected;
+
     println!("## aarch64 Features");
     println!();
 
     // Use std_detect crate macros
     macro_rules! check_feature {
         ($name:tt) => {
-            let detected = std::arch::is_aarch64_feature_detected!($name);
+            let detected = is_aarch64_feature_detected!($name);
             println!("  {}: {}", $name, if detected { "✓" } else { "✗" });
         };
     }
@@ -209,14 +370,13 @@ fn detect_aarch64_features() {
 
     // Print summary of preset levels
     println!("### Preset Level Summary");
-    let has_dotprod = std::arch::is_aarch64_feature_detected!("dotprod")
-        && std::arch::is_aarch64_feature_detected!("fp16");
-    let has_apple_m1 = has_dotprod
-        && std::arch::is_aarch64_feature_detected!("sha3")
-        && std::arch::is_aarch64_feature_detected!("fcma");
-    let has_sve2 = std::arch::is_aarch64_feature_detected!("sve2")
-        && std::arch::is_aarch64_feature_detected!("i8mm")
-        && std::arch::is_aarch64_feature_detected!("bf16");
+    let has_dotprod =
+        is_aarch64_feature_detected!("dotprod") && is_aarch64_feature_detected!("fp16");
+    let has_apple_m1 =
+        has_dotprod && is_aarch64_feature_detected!("sha3") && is_aarch64_feature_detected!("fcma");
+    let has_sve2 = is_aarch64_feature_detected!("sve2")
+        && is_aarch64_feature_detected!("i8mm")
+        && is_aarch64_feature_detected!("bf16");
 
     println!(
         "  aarch64-dotprod (dotprod+fp16): {}",
@@ -231,6 +391,149 @@ fn detect_aarch64_features() {
         if has_sve2 { "✓" } else { "✗" }
     );
     println!();
+
+    // Generate multiversion target string
+    println!("### Multiversion Target String");
+    let target_string = compose_aarch64_target_string();
+    println!();
+    println!("  {}", target_string);
+    println!();
+}
+
+#[cfg(target_arch = "aarch64")]
+fn compose_aarch64_target_string() -> String {
+    use std::arch::is_aarch64_feature_detected;
+
+    let mut features = Vec::new();
+
+    // Base architecture
+    features.push("aarch64");
+
+    // Core SIMD (neon is baseline, always present)
+    if is_aarch64_feature_detected!("neon") {
+        features.push("neon");
+    }
+
+    // Atomics
+    if is_aarch64_feature_detected!("lse") {
+        features.push("lse");
+    }
+    if is_aarch64_feature_detected!("lse2") {
+        features.push("lse2");
+    }
+
+    // Crypto
+    if is_aarch64_feature_detected!("aes") {
+        features.push("aes");
+    }
+    if is_aarch64_feature_detected!("sha2") {
+        features.push("sha2");
+    }
+    if is_aarch64_feature_detected!("sha3") {
+        features.push("sha3");
+    }
+    if is_aarch64_feature_detected!("sm4") {
+        features.push("sm4");
+    }
+    if is_aarch64_feature_detected!("pmull") {
+        features.push("pmull");
+    }
+
+    // CRC
+    if is_aarch64_feature_detected!("crc") {
+        features.push("crc");
+    }
+
+    // SIMD extensions
+    if is_aarch64_feature_detected!("dotprod") {
+        features.push("dotprod");
+    }
+    if is_aarch64_feature_detected!("fp16") {
+        features.push("fp16");
+    }
+    if is_aarch64_feature_detected!("fhm") {
+        features.push("fhm");
+    }
+    if is_aarch64_feature_detected!("rdm") {
+        features.push("rdm");
+    }
+    if is_aarch64_feature_detected!("fcma") {
+        features.push("fcma");
+    }
+    if is_aarch64_feature_detected!("i8mm") {
+        features.push("i8mm");
+    }
+    if is_aarch64_feature_detected!("bf16") {
+        features.push("bf16");
+    }
+
+    // RCPC
+    if is_aarch64_feature_detected!("rcpc") {
+        features.push("rcpc");
+    }
+    if is_aarch64_feature_detected!("rcpc2") {
+        features.push("rcpc2");
+    }
+
+    // SVE family
+    if is_aarch64_feature_detected!("sve") {
+        features.push("sve");
+    }
+    if is_aarch64_feature_detected!("sve2") {
+        features.push("sve2");
+    }
+    if is_aarch64_feature_detected!("sve2-aes") {
+        features.push("sve2-aes");
+    }
+    if is_aarch64_feature_detected!("sve2-bitperm") {
+        features.push("sve2-bitperm");
+    }
+    if is_aarch64_feature_detected!("sve2-sha3") {
+        features.push("sve2-sha3");
+    }
+    if is_aarch64_feature_detected!("sve2-sm4") {
+        features.push("sve2-sm4");
+    }
+    if is_aarch64_feature_detected!("f32mm") {
+        features.push("f32mm");
+    }
+    if is_aarch64_feature_detected!("f64mm") {
+        features.push("f64mm");
+    }
+
+    // Other features
+    if is_aarch64_feature_detected!("jsconv") {
+        features.push("jsconv");
+    }
+    if is_aarch64_feature_detected!("dpb") {
+        features.push("dpb");
+    }
+    if is_aarch64_feature_detected!("dpb2") {
+        features.push("dpb2");
+    }
+    if is_aarch64_feature_detected!("frintts") {
+        features.push("frintts");
+    }
+    if is_aarch64_feature_detected!("flagm") {
+        features.push("flagm");
+    }
+    if is_aarch64_feature_detected!("sb") {
+        features.push("sb");
+    }
+    if is_aarch64_feature_detected!("paca") {
+        features.push("paca");
+    }
+    if is_aarch64_feature_detected!("pacg") {
+        features.push("pacg");
+    }
+    if is_aarch64_feature_detected!("dit") {
+        features.push("dit");
+    }
+    if is_aarch64_feature_detected!("bti") {
+        features.push("bti");
+    }
+
+    features.join("+")
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -265,4 +568,32 @@ fn detect_wasm_features() {
     println!("  bulk-memory: ✗ (not compiled with)");
 
     println!();
+
+    // Generate compile-time target string
+    println!("### Multiversion Target String (compile-time)");
+    let target_string = compose_wasm_target_string();
+    println!();
+    println!("  {}", target_string);
+    println!();
+}
+
+#[cfg(target_arch = "wasm32")]
+fn compose_wasm_target_string() -> String {
+    let mut features = Vec::new();
+
+    features.push("wasm32");
+
+    #[cfg(target_feature = "simd128")]
+    features.push("simd128");
+
+    #[cfg(target_feature = "relaxed-simd")]
+    features.push("relaxed-simd");
+
+    #[cfg(target_feature = "atomics")]
+    features.push("atomics");
+
+    #[cfg(target_feature = "bulk-memory")]
+    features.push("bulk-memory");
+
+    features.join("+")
 }
