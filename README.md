@@ -100,13 +100,13 @@ The ~0.3ns difference is the indirect call cost. Feature checking happens at com
 multiversed = "0.2"
 
 # Minimal (v3 only, no AVX-512)
-multiversed = { version = "0.1", default-features = false, features = ["x86-64-v3", "arm64"] }
+multiversed = { version = "0.2", default-features = false, features = ["x86-64-v3", "arm64"] }
 
 # Add Skylake-X compatibility (base v4 without Ice Lake extras)
-multiversed = { version = "0.1", features = ["x86-64-v4"] }
+multiversed = { version = "0.2", features = ["x86-64-v4"] }
 
 # Disable multiversioning (debugging/profiling)
-multiversed = { version = "0.1", features = ["force-disable"] }
+multiversed = { version = "0.2", features = ["force-disable"] }
 ```
 
 ### Special Features
