@@ -117,7 +117,8 @@ multiversed = { version = "0.2", features = ["force-disable"] }
 
 ## wasm32
 
-The `multiversion` crate does not support wasm32 (no runtime feature detection).
+The `multiversion` crate elides itself on wasm32 (no runtime feature detection available), so there's no downside to using `#[multiversed]` in cross-platform code—it simply becomes a no-op on wasm.
+
 For wasm32 SIMD, compile with the target feature directly:
 
 ```bash
