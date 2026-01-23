@@ -2,47 +2,52 @@
 //!
 //! Tests that aarch64-only configurations work correctly, and that the macro
 //! generates appropriate cfg_attr for aarch64 architecture only.
-//! Note: baseline NEON is implicit - these presets are all above baseline.
 
 use multiversed::multiversed;
 
-/// Uses all aarch64 presets from features
+/// Uses arm64 preset from features
 #[multiversed]
 pub fn sum_all_aarch64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use basic (dotprod + fp16)
-#[multiversed("aarch64-basic")]
-pub fn sum_basic(data: &[f32]) -> f32 {
+/// Explicitly use arm64 (NEON + FP16)
+#[multiversed("arm64")]
+pub fn sum_arm64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use v84 (sha3 + fcma)
-#[multiversed("aarch64-v84")]
-pub fn sum_v84(data: &[f32]) -> f32 {
+/// Raw aarch64 target string with dotprod
+#[multiversed("aarch64+neon+dotprod")]
+pub fn sum_dotprod(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use sve (SVE + i8mm + bf16, Graviton3)
-#[multiversed("aarch64-sve")]
+/// Raw aarch64 target string with SHA3
+#[multiversed("aarch64+neon+sha3")]
+pub fn sum_sha3(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+/// Raw aarch64 target string with SVE
+#[multiversed("aarch64+neon+sve")]
 pub fn sum_sve(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use sve2 (SVE2 + i8mm + bf16, Graviton4)
-#[multiversed("aarch64-sve2")]
+/// Raw aarch64 target string with SVE2
+#[multiversed("aarch64+neon+sve2")]
 pub fn sum_sve2(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Mix of explicit presets
-#[multiversed("aarch64-basic", "aarch64-sve2")]
-pub fn sum_basic_and_sve2(data: &[f32]) -> f32 {
+/// Mix of arm64 preset and raw SVE2
+#[multiversed("arm64", "aarch64+neon+sve2")]
+pub fn sum_arm64_and_sve2(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Raw aarch64 target string
+/// Raw aarch64 target string with AES
 #[multiversed("aarch64+neon+aes")]
 pub fn sum_raw_neon(data: &[f32]) -> f32 {
     data.iter().sum()
@@ -61,13 +66,18 @@ mod tests {
     }
 
     #[test]
-    fn test_basic() {
-        assert_eq!(sum_basic(&TEST_DATA), EXPECTED_SUM);
+    fn test_arm64() {
+        assert_eq!(sum_arm64(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]
-    fn test_v84() {
-        assert_eq!(sum_v84(&TEST_DATA), EXPECTED_SUM);
+    fn test_dotprod() {
+        assert_eq!(sum_dotprod(&TEST_DATA), EXPECTED_SUM);
+    }
+
+    #[test]
+    fn test_sha3() {
+        assert_eq!(sum_sha3(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]
@@ -81,8 +91,8 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_and_sve2() {
-        assert_eq!(sum_basic_and_sve2(&TEST_DATA), EXPECTED_SUM);
+    fn test_arm64_and_sve2() {
+        assert_eq!(sum_arm64_and_sve2(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]

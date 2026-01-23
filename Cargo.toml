@@ -1,6 +1,6 @@
 [package]
 name = "multiversed"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Attribute macros wrapping multiversion with predefined SIMD target presets"
 license = "MIT OR Apache-2.0"
@@ -17,7 +17,7 @@ syn = { version = "2.0", features = ["full", "parsing"] }
 proc-macro2 = "1.0"
 
 [features]
-default = ["x86-64-v3", "aarch64-basic"]
+default = ["x86-64-v3", "x86-64-v4-modern", "arm64"]
 
 # Disable all multiversioning (passthrough only, useful for debugging/faster builds)
 force-disable = []
@@ -32,24 +32,20 @@ x86-64-v2 = []
 # x86-64-v3: AVX2 + FMA + BMI (Haswell 2013+, Zen 2 2019+) - RECOMMENDED
 x86-64-v3 = []
 
-# x86-64-v4: AVX-512 (Skylake-X 2017+, Zen 4 2022+)
+# x86-64-v4: AVX-512 base (Skylake-X 2017+, Zen 4 2022+)
 x86-64-v4 = []
+
+# x86-64-v4-modern: Full modern AVX-512 (Ice Lake 2019+, Zen 4 2022+)
+# Adds VNNI, VBMI2, BITALG, BF16, GFNI, VAES - NOT available on Skylake-X
+x86-64-v4-modern = []
 
 # ============================================================================
 # aarch64 presets (above baseline - NEON is implicit)
 # ============================================================================
 
-# aarch64-basic: dotprod + fp16 (Cortex-A75+, Apple M1+, Neoverse N1) - RECOMMENDED
-aarch64-basic = []
-
-# aarch64-v84: + sha3 + fcma (Cortex-A76+, Apple M1+, Snapdragon X, Neoverse V1+)
-aarch64-v84 = []
-
-# aarch64-sve: SVE + i8mm + bf16 (Neoverse V1 / Graviton3 only)
-aarch64-sve = []
-
-# aarch64-sve2: SVE2 + i8mm + bf16 (Neoverse N2/V2+ / Graviton4+)
-aarch64-sve2 = []
+# arm64: NEON + FP16 (Cortex-A75+, Apple M1+, Neoverse N1+, Snapdragon X) - RECOMMENDED
+# Minimal feature set that covers all modern ARM64 hardware
+arm64 = []
 
 [dev-dependencies]
 multiversion = "0.8"

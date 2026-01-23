@@ -10,20 +10,20 @@
 //! ```ignore
 //! use multiversed::multiversed;
 //!
-//! // Use targets from enabled cargo features (default: x86-64-v3, aarch64-basic)
+//! // Use targets from enabled cargo features (default: x86-64-v3, x86-64-v4-modern, arm64)
 //! #[multiversed]
 //! pub fn dot_product(a: &[f32], b: &[f32]) -> f32 {
 //!     a.iter().zip(b).map(|(x, y)| x * y).sum()
 //! }
 //!
 //! // Explicit presets
-//! #[multiversed("x86-64-v4", "aarch64-sve2")]
+//! #[multiversed("x86-64-v4", "arm64")]
 //! pub fn optimized_sum(data: &[f32]) -> f32 {
 //!     data.iter().sum()
 //! }
 //!
 //! // Mix presets with custom raw target strings
-//! #[multiversed("x86-64-v3", "x86_64+avx2+fma+bmi2")]
+//! #[multiversed("x86-64-v3", "aarch64+neon+dotprod")]
 //! pub fn custom_targets(data: &[f32]) -> f32 {
 //!     data.iter().sum()
 //! }
@@ -42,7 +42,8 @@
 //! |---------|--------------|----------|
 //! | `x86-64-v2` | SSE4.2, POPCNT | Nehalem 2008+, Bulldozer 2011+ |
 //! | `x86-64-v3` | AVX2, FMA, BMI1/2 | Haswell 2013+, Zen 1 2017+ |
-//! | `x86-64-v4` | AVX-512 (F/BW/DQ/VL/CD) | Xeon 2017+, Zen 4 2022+ |
+//! | `x86-64-v4` | AVX-512 (F/BW/DQ/VL/CD) | Skylake-X 2017+, Zen 4 2022+ |
+//! | `x86-64-v4-modern` | + VNNI, VBMI2, BF16, GFNI, VAES | Ice Lake 2019+, Zen 4 2022+ |
 //!
 //! **Note**: Intel consumer CPUs (Alder Lake 12th gen through Arrow Lake) do NOT have
 //! AVX-512 due to E-core limitations. Only Xeon server, i9-X workstation, and AMD Zen 4+
@@ -52,19 +53,16 @@
 //!
 //! | Feature | Key Features | Hardware |
 //! |---------|--------------|----------|
-//! | `aarch64-basic` | dotprod, fp16 | Neoverse N1, Cortex-A75+, Apple M1+, Oryon |
-//! | `aarch64-v84` | + sha3, fcma | Apple M1+, Snapdragon X, Neoverse V1+ |
-//! | `aarch64-sve` | + SVE, i8mm, bf16 | Neoverse V1 (Graviton3) |
-//! | `aarch64-sve2` | + SVE2, i8mm, bf16 | Neoverse N2/V2+ (Graviton4) |
+//! | `arm64` | NEON, FP16 | Cortex-A75+, Apple M1+, Neoverse N1+, Snapdragon X |
 //!
-//! **Note**: SVE/SVE2 is server-only (Neoverse). Apple Silicon, Qualcomm Oryon, and
-//! Cortex-A/X mobile cores do NOT implement SVE.
+//! **Note**: Only the minimal NEON+FP16 baseline is provided. Use raw target strings
+//! for additional features like dotprod, sha3, or SVE.
 //!
 //! # Attribute Arguments
 //!
 //! The `#[multiversed]` attribute accepts:
 //! - **No arguments**: Uses targets from enabled cargo features
-//! - **Preset names**: `"x86-64-v3"`, `"aarch64-basic"`, etc.
+//! - **Preset names**: `"x86-64-v3"`, `"arm64"`, etc.
 //! - **Raw target strings**: Any string containing `+` is passed through as-is
 //!
 //! Multiple arguments are comma-separated and all are included in the target list.
@@ -88,22 +86,18 @@ const X86_64_V3: &str =
     "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+bmi1+bmi2+f16c+fma+lzcnt+movbe+xsave+fxsr";
 
 // x86-64-v4: AVX-512 (Skylake-X 2017+, Zen 4 2022+)
+// Pure psABI v4: F+CD+VL+DQ+BW only (no Ice Lake extras like gfni/vaes/vpclmulqdq)
 const X86_64_V4: &str =
-    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+bmi1+bmi2+f16c+fma+lzcnt+movbe+xsave+fxsr+avx512f+avx512bw+avx512dq+avx512vl+avx512cd+gfni+vaes+vpclmulqdq";
+    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+bmi1+bmi2+f16c+fma+lzcnt+movbe+xsave+fxsr+avx512f+avx512bw+avx512dq+avx512vl+avx512cd";
 
-// aarch64-basic: dotprod + fp16 (Neoverse N1, Cortex-A75+, Apple M1+, Snapdragon X)
-const AARCH64_BASIC: &str = "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+fhm";
+// x86-64-v4-modern: Full modern AVX-512 (Ice Lake 2019+, Zen 4 2022+)
+// Includes VNNI, VBMI2, BITALG, BF16, GFNI, VAES, VPCLMULQDQ - NOT in Skylake-X
+const X86_64_V4_MODERN: &str =
+    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+bmi1+bmi2+f16c+fma+lzcnt+movbe+xsave+fxsr+avx512f+avx512bw+avx512dq+avx512vl+avx512cd+avx512vpopcntdq+avx512ifma+avx512vbmi+avx512vbmi2+avx512bitalg+avx512vnni+avx512bf16+vpclmulqdq+gfni+vaes";
 
-// aarch64-v84: +sha3 +fcma (Apple M1+, Snapdragon X, Neoverse V1+)
-const AARCH64_V84: &str = "aarch64+neon+lse+aes+sha2+sha3+crc+dotprod+rcpc+fp16+fhm+fcma";
-
-// aarch64-sve: SVE + i8mm + bf16 (Neoverse V1 / Graviton3 only - has SVE but NOT SVE2)
-const AARCH64_SVE: &str =
-    "aarch64+neon+lse+aes+sha2+sha3+crc+dotprod+rcpc+fp16+fhm+fcma+sve+i8mm+bf16";
-
-// aarch64-sve2: SVE2 + i8mm + bf16 (Neoverse N2 2022+, V2 2023+ / Graviton4+)
-// Note: sve-bitperm is optional; using base sve2 for compatibility
-const AARCH64_SVE2: &str = "aarch64+neon+lse+aes+sha2+crc+dotprod+rcpc+fp16+fhm+sve2+i8mm+bf16";
+// arm64: NEON + FP16 (baseline for Apple M1+, Cortex-A75+, Neoverse N1+)
+// Minimal feature set that works everywhere - matches archmage's Arm64 approach
+const ARM64: &str = "aarch64+neon+fp16";
 
 // Note: wasm32 has no runtime feature detection and multiversion doesn't support it.
 // The wasm32-simd128 feature exists for documentation but generates no multiversion code.
@@ -120,11 +114,9 @@ fn resolve_target(s: &str) -> Option<&str> {
         "x86-64-v2" => Some(X86_64_V2),
         "x86-64-v3" => Some(X86_64_V3),
         "x86-64-v4" => Some(X86_64_V4),
+        "x86-64-v4-modern" => Some(X86_64_V4_MODERN),
         // aarch64 presets
-        "aarch64-basic" => Some(AARCH64_BASIC),
-        "aarch64-v84" => Some(AARCH64_V84),
-        "aarch64-sve" => Some(AARCH64_SVE),
-        "aarch64-sve2" => Some(AARCH64_SVE2),
+        "arm64" => Some(ARM64),
         // wasm32 - multiversion doesn't support it, ignore
         "wasm32-simd128" => None,
         // Raw target string - pass through if it looks like a valid target
@@ -179,6 +171,9 @@ fn default_x86_targets() -> Vec<&'static str> {
     let mut targets = Vec::new();
 
     // Higher tiers first (more specific optimizations)
+    #[cfg(feature = "x86-64-v4-modern")]
+    targets.push(X86_64_V4_MODERN);
+
     #[cfg(feature = "x86-64-v4")]
     targets.push(X86_64_V4);
 
@@ -195,18 +190,8 @@ fn default_x86_targets() -> Vec<&'static str> {
 fn default_aarch64_targets() -> Vec<&'static str> {
     let mut targets = Vec::new();
 
-    // Higher tiers first (more specific optimizations)
-    #[cfg(feature = "aarch64-sve2")]
-    targets.push(AARCH64_SVE2);
-
-    #[cfg(feature = "aarch64-sve")]
-    targets.push(AARCH64_SVE);
-
-    #[cfg(feature = "aarch64-v84")]
-    targets.push(AARCH64_V84);
-
-    #[cfg(feature = "aarch64-basic")]
-    targets.push(AARCH64_BASIC);
+    #[cfg(feature = "arm64")]
+    targets.push(ARM64);
 
     targets
 }
@@ -244,7 +229,7 @@ fn default_aarch64_targets() -> Vec<&'static str> {
 /// # Arguments
 ///
 /// - **No arguments**: Uses targets from enabled cargo features
-/// - **Preset names**: `"x86-64-v3"`, `"aarch64-basic"`, etc.
+/// - **Preset names**: `"x86-64-v3"`, `"arm64"`, etc.
 /// - **Raw target strings**: Any string with `+` is passed through to multiversion
 #[proc_macro_attribute]
 pub fn multiversed(attr: TokenStream, item: TokenStream) -> TokenStream {

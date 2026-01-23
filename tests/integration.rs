@@ -44,31 +44,17 @@ fn sum_multi_x86(data: &[f32]) -> f32 {
 }
 
 // ============================================================================
-// Explicit aarch64 preset selection (above baseline - NEON is implicit)
+// Explicit aarch64 preset selection
 // ============================================================================
 
-#[multiversed("aarch64-basic")]
-fn sum_aarch64_basic(data: &[f32]) -> f32 {
+#[multiversed("arm64")]
+fn sum_arm64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-#[multiversed("aarch64-v84")]
-fn sum_aarch64_v84(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
-
-#[multiversed("aarch64-sve")]
-fn sum_aarch64_sve(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
-
-#[multiversed("aarch64-sve2")]
-fn sum_aarch64_sve2(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
-
-#[multiversed("aarch64-basic", "aarch64-v84", "aarch64-sve", "aarch64-sve2")]
-fn sum_multi_aarch64(data: &[f32]) -> f32 {
+// Raw target string for custom feature combinations
+#[multiversed("aarch64+neon+dotprod")]
+fn sum_aarch64_dotprod(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -86,13 +72,13 @@ fn sum_wasm_simd128(data: &[f32]) -> f32 {
 // Cross-architecture combinations
 // ============================================================================
 
-#[multiversed("x86-64-v4", "aarch64-sve2")]
+#[multiversed("x86-64-v4", "arm64")]
 fn sum_high_tier(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
 // wasm32-simd128 is silently filtered out
-#[multiversed("x86-64-v3", "aarch64-basic", "wasm32-simd128")]
+#[multiversed("x86-64-v3", "arm64", "wasm32-simd128")]
 fn sum_all_archs(data: &[f32]) -> f32 {
     data.iter().sum()
 }
@@ -106,7 +92,7 @@ fn sum_mixed_x86(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-#[multiversed("aarch64-basic", "aarch64+neon")]
+#[multiversed("arm64", "aarch64+neon")]
 fn sum_mixed_aarch64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
@@ -182,11 +168,8 @@ fn test_x86_presets() {
 #[test]
 fn test_aarch64_presets() {
     let data = [1.0f32, 2.0, 3.0, 4.0];
-    assert!((sum_aarch64_basic(&data) - 10.0).abs() < 0.001);
-    assert!((sum_aarch64_v84(&data) - 10.0).abs() < 0.001);
-    assert!((sum_aarch64_sve(&data) - 10.0).abs() < 0.001);
-    assert!((sum_aarch64_sve2(&data) - 10.0).abs() < 0.001);
-    assert!((sum_multi_aarch64(&data) - 10.0).abs() < 0.001);
+    assert!((sum_arm64(&data) - 10.0).abs() < 0.001);
+    assert!((sum_aarch64_dotprod(&data) - 10.0).abs() < 0.001);
 }
 
 #[test]

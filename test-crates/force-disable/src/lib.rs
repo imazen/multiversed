@@ -13,7 +13,7 @@ pub fn sum_array(data: &[f32]) -> f32 {
 }
 
 /// Even with explicit presets, force-disable makes it a passthrough
-#[multiversed("x86-64-v3", "aarch64-basic")]
+#[multiversed("x86-64-v3", "arm64")]
 pub fn sum_with_presets(data: &[f32]) -> f32 {
     data.iter().sum()
 }

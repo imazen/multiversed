@@ -513,27 +513,13 @@ fn detect_aarch64_features() {
 
     // Preset levels
     println!("### Preset Level Summary");
-    let has_basic = is_detected("dotprod") && is_detected("fp16");
-    let has_v84 = has_basic && is_detected("sha3") && is_detected("fcma");
-    let has_sve = has_v84 && is_detected("sve") && is_detected("i8mm") && is_detected("bf16");
-    let has_sve2 = has_sve && is_detected("sve2");
+    // arm64 preset requires neon (baseline) + fp16
+    let has_arm64 = is_detected("fp16");
 
-    println!(
-        "  aarch64-basic (dotprod+fp16): {}",
-        if has_basic { "✓" } else { "✗" }
-    );
-    println!(
-        "  aarch64-v84 (sha3+fcma): {}",
-        if has_v84 { "✓" } else { "✗" }
-    );
-    println!(
-        "  aarch64-sve (sve+i8mm+bf16): {}",
-        if has_sve { "✓" } else { "✗" }
-    );
-    println!(
-        "  aarch64-sve2 (sve2): {}",
-        if has_sve2 { "✓" } else { "✗" }
-    );
+    println!("  arm64 (neon+fp16): {}", if has_arm64 { "✓" } else { "✗" });
+    println!();
+    println!("  For additional features (dotprod, sha3, sve, etc.),");
+    println!("  use raw target strings: \"aarch64+neon+dotprod+sha3\"");
     println!();
 
     // Target string

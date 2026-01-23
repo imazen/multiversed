@@ -32,27 +32,17 @@ pub fn sum_x86_v4(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
+#[multiversed("x86-64-v4-modern")]
+pub fn sum_x86_v4_modern(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
 // ============================================================================
 // Named presets - aarch64
 // ============================================================================
 
-#[multiversed("aarch64-basic")]
-pub fn sum_aarch64_basic(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
-
-#[multiversed("aarch64-v84")]
-pub fn sum_aarch64_v84(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
-
-#[multiversed("aarch64-sve")]
-pub fn sum_aarch64_sve(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
-
-#[multiversed("aarch64-sve2")]
-pub fn sum_aarch64_sve2(data: &[f32]) -> f32 {
+#[multiversed("arm64")]
+pub fn sum_arm64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -60,13 +50,8 @@ pub fn sum_aarch64_sve2(data: &[f32]) -> f32 {
 // Multiple tiers (runtime picks best)
 // ============================================================================
 
-#[multiversed("x86-64-v4", "x86-64-v3", "x86-64-v2")]
+#[multiversed("x86-64-v4-modern", "x86-64-v4", "x86-64-v3", "x86-64-v2")]
 pub fn sum_x86_tiered(data: &[f32]) -> f32 {
-    data.iter().sum()
-}
-
-#[multiversed("aarch64-sve2", "aarch64-sve", "aarch64-v84", "aarch64-basic")]
-pub fn sum_aarch64_tiered(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -93,7 +78,7 @@ pub fn sum_raw_neon(data: &[f32]) -> f32 {
 // Mixed presets and raw strings
 // ============================================================================
 
-#[multiversed("x86-64-v3", "x86_64+avx512f", "aarch64-basic")]
+#[multiversed("x86-64-v3", "x86_64+avx512f", "arm64")]
 pub fn sum_mixed(data: &[f32]) -> f32 {
     data.iter().sum()
 }
@@ -114,22 +99,19 @@ mod tests {
         assert_eq!(sum_x86_v2(&data), 15.0);
         assert_eq!(sum_x86_v3(&data), 15.0);
         assert_eq!(sum_x86_v4(&data), 15.0);
+        assert_eq!(sum_x86_v4_modern(&data), 15.0);
     }
 
     #[test]
     fn test_aarch64_presets() {
         let data = [1.0f32, 2.0, 3.0, 4.0, 5.0];
-        assert_eq!(sum_aarch64_basic(&data), 15.0);
-        assert_eq!(sum_aarch64_v84(&data), 15.0);
-        assert_eq!(sum_aarch64_sve(&data), 15.0);
-        assert_eq!(sum_aarch64_sve2(&data), 15.0);
+        assert_eq!(sum_arm64(&data), 15.0);
     }
 
     #[test]
     fn test_tiered() {
         let data = [1.0f32, 2.0, 3.0, 4.0, 5.0];
         assert_eq!(sum_x86_tiered(&data), 15.0);
-        assert_eq!(sum_aarch64_tiered(&data), 15.0);
     }
 
     #[test]

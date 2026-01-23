@@ -1,6 +1,17 @@
 # CPU Architecture Feature Table
 
-Working document for designing multiversed presets.
+Reference document for multiversed presets and CPU feature availability.
+
+## Quick Reference: Available Presets
+
+| Preset | Features | Use Case |
+|--------|----------|----------|
+| `x86-64-v3` | AVX2, FMA, BMI | Desktop/laptop baseline (2013+) |
+| `x86-64-v4` | + AVX-512 core | Skylake-X, Zen 4+ servers |
+| `x86-64-v4-modern` | + VNNI, VBMI2, BF16, GFNI | Ice Lake+, Zen 4+ (default) |
+| `arm64` | NEON, FP16 | All modern ARM64 (2017+) |
+
+For features beyond these presets, use raw target strings: `"aarch64+neon+dotprod+sha3"`
 
 ## x86-64 Microarchitecture Levels (psABI Standard)
 
@@ -171,7 +182,7 @@ Note: Qualcomm chose NOT to implement SVE in Oryon cores.
 | SME | v9.0 | V3+ | - | M4+ | - |
 | SME2 | v9.2 | V3+ | - | M4+ | - |
 
-## Proposed Presets
+## Implemented Presets
 
 Based on the above data:
 
@@ -180,16 +191,16 @@ Based on the above data:
 |--------|----------|-----------------|
 | `x86-64-v2` | SSE4.2, POPCNT | 2008+ (broad compat) |
 | `x86-64-v3` | AVX2, FMA, BMI | 2013+ (recommended) |
-| `x86-64-v4` | AVX-512 | 2017+ (server/Zen4+) |
+| `x86-64-v4` | AVX-512 (F/BW/DQ/VL/CD) | Skylake-X 2017+, Zen 4+ |
+| `x86-64-v4-modern` | + VNNI, VBMI2, BF16, GFNI, VAES | Ice Lake 2019+, Zen 4+ |
 
 ### aarch64
 
 | Preset | Key Features | Target Hardware |
 |--------|--------------|-----------------|
-| `aarch64-basic` | DOTPROD, FP16 | N1, A75+, M1+, Oryon (2017+) |
-| `aarch64-v84` | + SHA3, FCMA | M1+, Oryon, V1+ (2020+) |
-| `aarch64-sve` | + SVE, I8MM, BF16 | Graviton3 (V1) only |
-| `aarch64-sve2` | + SVE2 | N2, V2+ (Graviton4+) |
+| `arm64` | NEON, FP16 | A75+, M1+, N1+, Oryon (2017+) |
+
+For additional aarch64 features (dotprod, sha3, SVE), use raw target strings.
 
 ## Sources
 

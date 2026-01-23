@@ -51,14 +51,11 @@ jobs:
       - name: Build (x86-64-v4 only)
         run: cargo build --no-default-features --features x86-64-v4 --verbose
 
-      - name: Build (aarch64-sve2 only)
-        run: cargo build --no-default-features --features aarch64-sve2 --verbose
+      - name: Build (arm64 only)
+        run: cargo build --no-default-features --features arm64 --verbose
 
       - name: Build (multiple x86 tiers)
-        run: cargo build --no-default-features --features "x86-64-v3,x86-64-v4" --verbose
-
-      - name: Build (multiple aarch64 tiers)
-        run: cargo build --no-default-features --features "aarch64-basic,aarch64-v84,aarch64-sve,aarch64-sve2" --verbose
+        run: cargo build --no-default-features --features "x86-64-v3,x86-64-v4,x86-64-v4-modern" --verbose
 
       - name: Test (force-disable)
         run: cargo test --features force-disable --verbose
