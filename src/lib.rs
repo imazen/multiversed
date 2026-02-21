@@ -10,14 +10,14 @@
 //! ```ignore
 //! use multiversed::multiversed;
 //!
-//! // Use targets from enabled cargo features (default: x86-64-v3, x86-64-v4-modern, arm64)
+//! // Use targets from enabled cargo features (default: x86-64-v3, x86-64-v4-modern, arm64-v2)
 //! #[multiversed]
 //! pub fn dot_product(a: &[f32], b: &[f32]) -> f32 {
 //!     a.iter().zip(b).map(|(x, y)| x * y).sum()
 //! }
 //!
 //! // Explicit presets
-//! #[multiversed("x86-64-v4", "arm64")]
+//! #[multiversed("x86-64-v4", "arm64-v2")]
 //! pub fn optimized_sum(data: &[f32]) -> f32 {
 //!     data.iter().sum()
 //! }
@@ -31,32 +31,33 @@
 //!
 //! # Cargo Features (Presets)
 //!
+//! Feature lists match the [archmage token registry] — the source of truth.
 //! Each feature is a complete, non-cumulative preset based on the [x86-64 psABI]
 //! microarchitecture levels and ARM architecture versions.
 //!
 //! [x86-64 psABI]: https://gitlab.com/x86-psABIs/x86-64-ABI
+//! [archmage token registry]: https://github.com/imazen/archmage
 //!
 //! ## x86/x86_64
 //!
-//! | Feature | Key Features | Hardware |
-//! |---------|--------------|----------|
-//! | `x86-64-v2` | SSE4.2, POPCNT | Nehalem 2008+, Bulldozer 2011+ |
-//! | `x86-64-v3` | AVX2, FMA, BMI1/2 | Haswell 2013+, Zen 1 2017+ |
-//! | `x86-64-v4` | AVX-512 (F/BW/DQ/VL/CD) | Skylake-X 2017+, Zen 4 2022+ |
-//! | `x86-64-v4-modern` | + VNNI, VBMI2, BF16, GFNI, VAES | Ice Lake 2019+, Zen 4 2022+ |
+//! | Feature | Archmage Token | Key Features | Hardware |
+//! |---------|----------------|--------------|----------|
+//! | `x86-64-v2` | X64V2Token | SSE4.2, POPCNT | Nehalem 2008+, Bulldozer 2011+ |
+//! | `x86-64-v3` | X64V3Token | AVX2, FMA, BMI1/2 | Haswell 2013+, Zen 1 2017+ |
+//! | `x86-64-v4` | X64V4Token | AVX-512 (F/BW/DQ/VL/CD) | Skylake-X 2017+, Zen 4 2022+ |
+//! | `x86-64-v4-modern` | X64V4xToken | + VNNI, VBMI2, GFNI, VAES | Ice Lake 2019+, Zen 4 2022+ |
 //!
 //! **Note**: Intel consumer CPUs (Alder Lake 12th gen through Arrow Lake) do NOT have
 //! AVX-512 due to E-core limitations. Only Xeon server, i9-X workstation, and AMD Zen 4+
 //! have AVX-512.
 //!
-//! ## aarch64 (above baseline - NEON is always present)
+//! ## aarch64
 //!
-//! | Feature | Key Features | Hardware |
-//! |---------|--------------|----------|
-//! | `arm64` | NEON, FP16 | Cortex-A75+, Apple M1+, Neoverse N1+, Snapdragon X |
-//!
-//! **Note**: Only the minimal NEON+FP16 baseline is provided. Use raw target strings
-//! for additional features like dotprod, sha3, or SVE.
+//! | Feature | Archmage Token | Key Features | Hardware |
+//! |---------|----------------|--------------|----------|
+//! | `arm64` | NeonToken | NEON | All AArch64 |
+//! | `arm64-v2` | Arm64V2Token | + CRC, DotProd, FP16, AES | Cortex-A55+, Apple M1+, Graviton 2+ |
+//! | `arm64-v3` | Arm64V3Token | + SHA3, I8MM, BF16 | Cortex-A510+, Apple M2+, Graviton 3+ |
 //!
 //! # Attribute Arguments
 //!
@@ -76,28 +77,40 @@ use syn::{parse_macro_input, ItemFn, LitStr, Token};
 
 // ============================================================================
 // Target string definitions (preset name -> multiversion target string)
+//
+// Feature lists match archmage token-registry.toml — the source of truth.
 // ============================================================================
 
-// x86-64-v2: SSE4.2 baseline (Nehalem 2008+)
-const X86_64_V2: &str = "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt";
+// x86-64-v2: SSE4.2 + POPCNT + CX16 (Nehalem 2008+, Bulldozer 2011+)
+// Matches archmage X64V2Token
+const X86_64_V2: &str = "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b";
 
-// x86-64-v3: AVX2 + FMA (Haswell 2013+, Zen 2 2019+)
+// x86-64-v3: AVX2 + FMA (Haswell 2013+, Zen 1 2017+)
+// Matches archmage X64V3Token
 const X86_64_V3: &str =
-    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+bmi1+bmi2+f16c+fma+lzcnt+movbe+xsave+fxsr";
+    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe";
 
 // x86-64-v4: AVX-512 (Skylake-X 2017+, Zen 4 2022+)
-// Pure psABI v4: F+CD+VL+DQ+BW only (no Ice Lake extras like gfni/vaes/vpclmulqdq)
+// Matches archmage X64V4Token — pure psABI v4: F+CD+VL+DQ+BW only
 const X86_64_V4: &str =
-    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+bmi1+bmi2+f16c+fma+lzcnt+movbe+xsave+fxsr+avx512f+avx512bw+avx512dq+avx512vl+avx512cd";
+    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe+avx512f+avx512bw+avx512cd+avx512dq+avx512vl";
 
 // x86-64-v4-modern: Full modern AVX-512 (Ice Lake 2019+, Zen 4 2022+)
-// Includes VNNI, VBMI2, BITALG, BF16, GFNI, VAES, VPCLMULQDQ - NOT in Skylake-X
+// Matches archmage X64V4xToken — adds VNNI, VBMI2, BITALG, GFNI, VAES, VPCLMULQDQ
 const X86_64_V4_MODERN: &str =
-    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+bmi1+bmi2+f16c+fma+lzcnt+movbe+xsave+fxsr+avx512f+avx512bw+avx512dq+avx512vl+avx512cd+avx512vpopcntdq+avx512ifma+avx512vbmi+avx512vbmi2+avx512bitalg+avx512vnni+avx512bf16+vpclmulqdq+gfni+vaes";
+    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe+avx512f+avx512bw+avx512cd+avx512dq+avx512vl+avx512vpopcntdq+avx512ifma+avx512vbmi+avx512vbmi2+avx512bitalg+avx512vnni+vpclmulqdq+gfni+vaes";
 
-// arm64: NEON + FP16 (baseline for Apple M1+, Cortex-A75+, Neoverse N1+)
-// Minimal feature set that works everywhere - matches archmage's Arm64 approach
-const ARM64: &str = "aarch64+neon+fp16";
+// arm64: NEON baseline (all AArch64)
+// Matches archmage NeonToken
+const ARM64: &str = "aarch64+neon";
+
+// arm64-v2: Modern ARM baseline (Cortex-A55+, Apple M1+, Graviton 2+)
+// Matches archmage Arm64V2Token
+const ARM64_V2: &str = "aarch64+neon+crc+rdm+dotprod+fp16+aes+sha2";
+
+// arm64-v3: Full modern ARM SIMD (Cortex-A510+, Apple M2+, Graviton 3+)
+// Matches archmage Arm64V3Token
+const ARM64_V3: &str = "aarch64+neon+crc+rdm+dotprod+fp16+aes+sha2+fhm+fcma+sha3+i8mm+bf16";
 
 // Note: wasm32 has no runtime feature detection and multiversion doesn't support it.
 // The wasm32-simd128 feature exists for documentation but generates no multiversion code.
@@ -117,6 +130,8 @@ fn resolve_target(s: &str) -> Option<&str> {
         "x86-64-v4-modern" => Some(X86_64_V4_MODERN),
         // aarch64 presets
         "arm64" => Some(ARM64),
+        "arm64-v2" => Some(ARM64_V2),
+        "arm64-v3" => Some(ARM64_V3),
         // wasm32 - multiversion doesn't support it, ignore
         "wasm32-simd128" => None,
         // Raw target string - pass through if it looks like a valid target
@@ -190,6 +205,13 @@ fn default_x86_targets() -> Vec<&'static str> {
 fn default_aarch64_targets() -> Vec<&'static str> {
     let mut targets = Vec::new();
 
+    // Higher tiers first (more specific optimizations)
+    #[cfg(feature = "arm64-v3")]
+    targets.push(ARM64_V3);
+
+    #[cfg(feature = "arm64-v2")]
+    targets.push(ARM64_V2);
+
     #[cfg(feature = "arm64")]
     targets.push(ARM64);
 
@@ -214,7 +236,7 @@ fn default_aarch64_targets() -> Vec<&'static str> {
 /// }
 ///
 /// // Explicit presets
-/// #[multiversed("x86-64-v4", "aarch64-sve2")]
+/// #[multiversed("x86-64-v4", "arm64-v2")]
 /// fn optimized(data: &[f32]) -> f32 {
 ///     data.iter().sum()
 /// }

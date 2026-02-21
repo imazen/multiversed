@@ -46,6 +46,16 @@ pub fn sum_arm64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
+#[multiversed("arm64-v2")]
+pub fn sum_arm64_v2(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+#[multiversed("arm64-v3")]
+pub fn sum_arm64_v3(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
 // ============================================================================
 // Multiple tiers (runtime picks best)
 // ============================================================================
@@ -106,6 +116,8 @@ mod tests {
     fn test_aarch64_presets() {
         let data = [1.0f32, 2.0, 3.0, 4.0, 5.0];
         assert_eq!(sum_arm64(&data), 15.0);
+        assert_eq!(sum_arm64_v2(&data), 15.0);
+        assert_eq!(sum_arm64_v3(&data), 15.0);
     }
 
     #[test]

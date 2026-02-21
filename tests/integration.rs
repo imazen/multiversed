@@ -52,6 +52,21 @@ fn sum_arm64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
+#[multiversed("arm64-v2")]
+fn sum_arm64_v2(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+#[multiversed("arm64-v3")]
+fn sum_arm64_v3(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+#[multiversed("arm64-v3", "arm64-v2", "arm64")]
+fn sum_arm64_tiered(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
 // Raw target string for custom feature combinations
 #[multiversed("aarch64+neon+dotprod")]
 fn sum_aarch64_dotprod(data: &[f32]) -> f32 {
@@ -169,6 +184,9 @@ fn test_x86_presets() {
 fn test_aarch64_presets() {
     let data = [1.0f32, 2.0, 3.0, 4.0];
     assert!((sum_arm64(&data) - 10.0).abs() < 0.001);
+    assert!((sum_arm64_v2(&data) - 10.0).abs() < 0.001);
+    assert!((sum_arm64_v3(&data) - 10.0).abs() < 0.001);
+    assert!((sum_arm64_tiered(&data) - 10.0).abs() < 0.001);
     assert!((sum_aarch64_dotprod(&data) - 10.0).abs() < 0.001);
 }
 

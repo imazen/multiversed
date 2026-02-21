@@ -17,7 +17,7 @@ syn = { version = "2.0", features = ["full", "parsing"] }
 proc-macro2 = "1.0"
 
 [features]
-default = ["x86-64-v3", "x86-64-v4-modern", "arm64"]
+default = ["x86-64-v3", "x86-64-v4-modern", "arm64-v2"]
 
 # Disable all multiversioning (passthrough only, useful for debugging/faster builds)
 force-disable = []
@@ -43,9 +43,16 @@ x86-64-v4-modern = []
 # aarch64 presets (above baseline - NEON is implicit)
 # ============================================================================
 
-# arm64: NEON + FP16 (Cortex-A75+, Apple M1+, Neoverse N1+, Snapdragon X) - RECOMMENDED
-# Minimal feature set that covers all modern ARM64 hardware
+# arm64: NEON baseline (all AArch64 — matches archmage NeonToken)
 arm64 = []
+
+# arm64-v2: Modern ARM baseline (Cortex-A55+, Apple M1+, Graviton 2+) - RECOMMENDED
+# Matches archmage Arm64V2Token: NEON + CRC + RDM + DotProd + FP16 + AES + SHA2
+arm64-v2 = []
+
+# arm64-v3: Full modern ARM SIMD (Cortex-A510+, Apple M2+, Graviton 3+)
+# Matches archmage Arm64V3Token: v2 + FHM + FCMA + SHA3 + I8MM + BF16
+arm64-v3 = []
 
 [dev-dependencies]
 multiversion = "0.8"

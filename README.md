@@ -24,14 +24,14 @@ fn sum(data: &[f32]) -> f32 { data.iter().sum() }
 ```rust
 use multiversed::multiversed;
 
-// Use cargo feature defaults (x86-64-v3, x86-64-v4-modern, arm64)
+// Use cargo feature defaults (x86-64-v3, x86-64-v4-modern, arm64-v2)
 #[multiversed]
 pub fn dot_product(a: &[f32], b: &[f32]) -> f32 {
     a.iter().zip(b).map(|(x, y)| x * y).sum()
 }
 
 // Explicit presets
-#[multiversed("x86-64-v4", "arm64")]
+#[multiversed("x86-64-v4", "arm64-v2")]
 pub fn optimized_sum(data: &[f32]) -> f32 {
     data.iter().sum()
 }
@@ -57,28 +57,29 @@ pub fn mixed_targets(data: &[f32]) -> f32 {
 
 ## Presets
 
-Each preset is a complete, non-cumulative feature set based on the [x86-64 psABI] microarchitecture levels and ARM architecture versions.
+Feature lists match the [archmage token registry] — the source of truth. Each preset is a complete, non-cumulative feature set based on the [x86-64 psABI] microarchitecture levels and ARM architecture versions.
 
 [x86-64 psABI]: https://gitlab.com/x86-psABIs/x86-64-ABI
+[archmage token registry]: https://github.com/imazen/archmage
 
 ### x86-64
 
-| Preset | Key Features | Hardware |
-|--------|--------------|----------|
-| `x86-64-v2` | SSE4.2, POPCNT | Nehalem 2008+, Bulldozer 2011+ |
-| `x86-64-v3` | AVX2, FMA, BMI1/2 | Haswell 2013+, Zen 1 2017+ |
-| `x86-64-v4` | AVX-512 (F/BW/DQ/VL/CD) | Skylake-X 2017+, Zen 4 2022+ |
-| `x86-64-v4-modern` | + VNNI, VBMI2, BF16, GFNI, VAES | Ice Lake 2019+, Zen 4 2022+ |
+| Preset | Archmage Token | Key Features | Hardware |
+|--------|----------------|--------------|----------|
+| `x86-64-v2` | X64V2Token | SSE4.2, POPCNT | Nehalem 2008+, Bulldozer 2011+ |
+| `x86-64-v3` | X64V3Token | AVX2, FMA, BMI1/2 | Haswell 2013+, Zen 1 2017+ |
+| `x86-64-v4` | X64V4Token | AVX-512 (F/BW/DQ/VL/CD) | Skylake-X 2017+, Zen 4 2022+ |
+| `x86-64-v4-modern` | X64V4xToken | + VNNI, VBMI2, GFNI, VAES | Ice Lake 2019+, Zen 4 2022+ |
 
 > **Note**: Intel consumer CPUs (12th-15th gen: Alder Lake, Raptor Lake, Arrow Lake) do **not** have AVX-512 due to E-core limitations. Only Xeon servers, i9-X/Xeon-W workstations, and AMD Zen 4+ have AVX-512. Use `x86-64-v4` for Skylake-X compatibility, or `x86-64-v4-modern` for Ice Lake+ / Zen 4+ only.
 
 ### aarch64
 
-| Preset | Key Features | Hardware |
-|--------|--------------|----------|
-| `arm64` | NEON, FP16 | Cortex-A75+, Apple M1+, Neoverse N1+, Snapdragon X |
-
-> **Note**: Only the minimal NEON+FP16 baseline is provided. Use raw target strings for additional features like dotprod, sha3, or SVE (e.g., `"aarch64+neon+dotprod+sha3"`).
+| Preset | Archmage Token | Key Features | Hardware |
+|--------|----------------|--------------|----------|
+| `arm64` | NeonToken | NEON | All AArch64 |
+| `arm64-v2` | Arm64V2Token | + CRC, DotProd, FP16, AES | Cortex-A55+, Apple M1+, Graviton 2+ |
+| `arm64-v3` | Arm64V3Token | + SHA3, I8MM, BF16 | Cortex-A510+, Apple M2+, Graviton 3+ |
 
 ## Dispatch Overhead
 
@@ -96,11 +97,11 @@ The ~0.3ns difference is the indirect call cost. Feature checking happens at com
 ## Cargo Features
 
 ```toml
-# Default: x86-64-v3 + x86-64-v4-modern + arm64
+# Default: x86-64-v3 + x86-64-v4-modern + arm64-v2
 multiversed = "0.2"
 
 # Minimal (v3 only, no AVX-512)
-multiversed = { version = "0.2", default-features = false, features = ["x86-64-v3", "arm64"] }
+multiversed = { version = "0.2", default-features = false, features = ["x86-64-v3", "arm64-v2"] }
 
 # Add Skylake-X compatibility (base v4 without Ice Lake extras)
 multiversed = { version = "0.2", features = ["x86-64-v4"] }

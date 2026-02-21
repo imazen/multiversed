@@ -11,5 +11,7 @@ multiversed = { path = "../..", features = [
     "x86-64-v4",
     "x86-64-v4-modern",
     "arm64",
+    "arm64-v2",
+    "arm64-v3",
 ] }
 multiversion = "0.8"

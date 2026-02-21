@@ -11,9 +11,27 @@ pub fn sum_all_aarch64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use arm64 (NEON + FP16)
+/// Explicitly use arm64 (NEON baseline)
 #[multiversed("arm64")]
 pub fn sum_arm64(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+/// arm64-v2: Modern ARM baseline (Cortex-A55+, Apple M1+, Graviton 2+)
+#[multiversed("arm64-v2")]
+pub fn sum_arm64_v2(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+/// arm64-v3: Full modern ARM SIMD (Cortex-A510+, Apple M2+, Graviton 3+)
+#[multiversed("arm64-v3")]
+pub fn sum_arm64_v3(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+/// Tiered aarch64 dispatch
+#[multiversed("arm64-v3", "arm64-v2", "arm64")]
+pub fn sum_arm64_tiered(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
@@ -68,6 +86,21 @@ mod tests {
     #[test]
     fn test_arm64() {
         assert_eq!(sum_arm64(&TEST_DATA), EXPECTED_SUM);
+    }
+
+    #[test]
+    fn test_arm64_v2() {
+        assert_eq!(sum_arm64_v2(&TEST_DATA), EXPECTED_SUM);
+    }
+
+    #[test]
+    fn test_arm64_v3() {
+        assert_eq!(sum_arm64_v3(&TEST_DATA), EXPECTED_SUM);
+    }
+
+    #[test]
+    fn test_arm64_tiered() {
+        assert_eq!(sum_arm64_tiered(&TEST_DATA), EXPECTED_SUM);
     }
 
     #[test]

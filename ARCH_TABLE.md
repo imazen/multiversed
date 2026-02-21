@@ -8,10 +8,12 @@ Reference document for multiversed presets and CPU feature availability.
 |--------|----------|----------|
 | `x86-64-v3` | AVX2, FMA, BMI | Desktop/laptop baseline (2013+) |
 | `x86-64-v4` | + AVX-512 core | Skylake-X, Zen 4+ servers |
-| `x86-64-v4-modern` | + VNNI, VBMI2, BF16, GFNI | Ice Lake+, Zen 4+ (default) |
-| `arm64` | NEON, FP16 | All modern ARM64 (2017+) |
+| `x86-64-v4-modern` | + VNNI, VBMI2, GFNI, VAES | Ice Lake+, Zen 4+ (default) |
+| `arm64` | NEON | All AArch64 |
+| `arm64-v2` | + CRC, DotProd, FP16, AES | A55+, M1+, Graviton 2+ (default) |
+| `arm64-v3` | + SHA3, I8MM, BF16 | A510+, M2+, Graviton 3+ |
 
-For features beyond these presets, use raw target strings: `"aarch64+neon+dotprod+sha3"`
+For features beyond these presets, use raw target strings: `"aarch64+neon+sve"`
 
 ## x86-64 Microarchitecture Levels (psABI Standard)
 
@@ -192,15 +194,17 @@ Based on the above data:
 | `x86-64-v2` | SSE4.2, POPCNT | 2008+ (broad compat) |
 | `x86-64-v3` | AVX2, FMA, BMI | 2013+ (recommended) |
 | `x86-64-v4` | AVX-512 (F/BW/DQ/VL/CD) | Skylake-X 2017+, Zen 4+ |
-| `x86-64-v4-modern` | + VNNI, VBMI2, BF16, GFNI, VAES | Ice Lake 2019+, Zen 4+ |
+| `x86-64-v4-modern` | + VNNI, VBMI2, GFNI, VAES | Ice Lake 2019+, Zen 4+ |
 
 ### aarch64
 
 | Preset | Key Features | Target Hardware |
 |--------|--------------|-----------------|
-| `arm64` | NEON, FP16 | A75+, M1+, N1+, Oryon (2017+) |
+| `arm64` | NEON | All AArch64 |
+| `arm64-v2` | + CRC, DotProd, FP16, AES, SHA2 | A55+, M1+, Graviton 2+ |
+| `arm64-v3` | + FHM, FCMA, SHA3, I8MM, BF16 | A510+, M2+, Graviton 3+ |
 
-For additional aarch64 features (dotprod, sha3, SVE), use raw target strings.
+For additional aarch64 features (SVE, SVE2), use raw target strings.
 
 ## Sources
 

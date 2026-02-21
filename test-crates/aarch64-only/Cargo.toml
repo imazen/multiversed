@@ -7,5 +7,7 @@ publish = false
 [dependencies]
 multiversed = { path = "../..", default-features = false, features = [
     "arm64",
+    "arm64-v2",
+    "arm64-v3",
 ] }
 multiversion = "0.8"
