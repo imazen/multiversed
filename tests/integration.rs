@@ -38,6 +38,11 @@ fn sum_x86_v4(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
+#[multiversed("x86-64-v4x")]
+fn sum_x86_v4x(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
 #[multiversed("x86-64-v3", "x86-64-v4")]
 fn sum_multi_x86(data: &[f32]) -> f32 {
     data.iter().sum()
@@ -177,6 +182,7 @@ fn test_x86_presets() {
     assert!((sum_x86_v2(&data) - 10.0).abs() < 0.001);
     assert!((sum_x86_v3(&data) - 10.0).abs() < 0.001);
     assert!((sum_x86_v4(&data) - 10.0).abs() < 0.001);
+    assert!((sum_x86_v4x(&data) - 10.0).abs() < 0.001);
     assert!((sum_multi_x86(&data) - 10.0).abs() < 0.001);
 }
 

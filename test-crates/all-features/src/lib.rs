@@ -37,6 +37,17 @@ pub fn sum_x86_v4_modern(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
+#[multiversed("x86-64-v4x")]
+pub fn sum_x86_v4x(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
+// wasm32-simd128 is silently ignored (multiversion elides on wasm32)
+#[multiversed("wasm32-simd128")]
+pub fn sum_wasm(data: &[f32]) -> f32 {
+    data.iter().sum()
+}
+
 // ============================================================================
 // Named presets - aarch64
 // ============================================================================
@@ -110,6 +121,8 @@ mod tests {
         assert_eq!(sum_x86_v3(&data), 15.0);
         assert_eq!(sum_x86_v4(&data), 15.0);
         assert_eq!(sum_x86_v4_modern(&data), 15.0);
+        assert_eq!(sum_x86_v4x(&data), 15.0);
+        assert_eq!(sum_wasm(&data), 15.0);
     }
 
     #[test]

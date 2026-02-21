@@ -10,7 +10,7 @@
 //! ```ignore
 //! use multiversed::multiversed;
 //!
-//! // Use targets from enabled cargo features (default: x86-64-v3, x86-64-v4-modern, arm64-v2)
+//! // Use targets from enabled cargo features (default: x86-64-v3, x86-64-v4x, arm64-v2)
 //! #[multiversed]
 //! pub fn dot_product(a: &[f32], b: &[f32]) -> f32 {
 //!     a.iter().zip(b).map(|(x, y)| x * y).sum()
@@ -45,7 +45,7 @@
 //! | `x86-64-v2` | X64V2Token | SSE4.2, POPCNT | Nehalem 2008+, Bulldozer 2011+ |
 //! | `x86-64-v3` | X64V3Token | AVX2, FMA, BMI1/2 | Haswell 2013+, Zen 1 2017+ |
 //! | `x86-64-v4` | X64V4Token | AVX-512 (F/BW/DQ/VL/CD) | Skylake-X 2017+, Zen 4 2022+ |
-//! | `x86-64-v4-modern` | X64V4xToken | + VNNI, VBMI2, GFNI, VAES | Ice Lake 2019+, Zen 4 2022+ |
+//! | `x86-64-v4-modern` / `x86-64-v4x` | X64V4xToken | + VNNI, VBMI2, GFNI, VAES | Ice Lake 2019+, Zen 4 2022+ |
 //!
 //! **Note**: Intel consumer CPUs (Alder Lake 12th gen through Arrow Lake) do NOT have
 //! AVX-512 due to E-core limitations. Only Xeon server, i9-X workstation, and AMD Zen 4+
@@ -58,6 +58,12 @@
 //! | `arm64` | NeonToken | NEON | All AArch64 |
 //! | `arm64-v2` | Arm64V2Token | + CRC, DotProd, FP16, AES | Cortex-A55+, Apple M1+, Graviton 2+ |
 //! | `arm64-v3` | Arm64V3Token | + SHA3, I8MM, BF16 | Cortex-A510+, Apple M2+, Graviton 3+ |
+//!
+//! ## wasm32
+//!
+//! | Feature | Archmage Token | Notes |
+//! |---------|----------------|-------|
+//! | `wasm32-simd128` | Wasm128Token | No-op (multiversion elides on wasm32) |
 //!
 //! # Attribute Arguments
 //!
@@ -127,7 +133,7 @@ fn resolve_target(s: &str) -> Option<&str> {
         "x86-64-v2" => Some(X86_64_V2),
         "x86-64-v3" => Some(X86_64_V3),
         "x86-64-v4" => Some(X86_64_V4),
-        "x86-64-v4-modern" => Some(X86_64_V4_MODERN),
+        "x86-64-v4-modern" | "x86-64-v4x" => Some(X86_64_V4_MODERN),
         // aarch64 presets
         "arm64" => Some(ARM64),
         "arm64-v2" => Some(ARM64_V2),
@@ -186,7 +192,7 @@ fn default_x86_targets() -> Vec<&'static str> {
     let mut targets = Vec::new();
 
     // Higher tiers first (more specific optimizations)
-    #[cfg(feature = "x86-64-v4-modern")]
+    #[cfg(any(feature = "x86-64-v4x", feature = "x86-64-v4-modern"))]
     targets.push(X86_64_V4_MODERN);
 
     #[cfg(feature = "x86-64-v4")]

@@ -17,7 +17,7 @@ syn = { version = "2.0", features = ["full", "parsing"] }
 proc-macro2 = "1.0"
 
 [features]
-default = ["x86-64-v3", "x86-64-v4-modern", "arm64-v2"]
+default = ["x86-64-v3", "x86-64-v4x", "arm64-v2", "wasm32-simd128"]
 
 # Disable all multiversioning (passthrough only, useful for debugging/faster builds)
 force-disable = []
@@ -35,9 +35,10 @@ x86-64-v3 = []
 # x86-64-v4: AVX-512 base (Skylake-X 2017+, Zen 4 2022+)
 x86-64-v4 = []
 
-# x86-64-v4-modern: Full modern AVX-512 (Ice Lake 2019+, Zen 4 2022+)
-# Adds VNNI, VBMI2, BITALG, BF16, GFNI, VAES - NOT available on Skylake-X
-x86-64-v4-modern = []
+# x86-64-v4-modern / x86-64-v4x: Full modern AVX-512 (Ice Lake 2019+, Zen 4 2022+)
+# Matches archmage X64V4xToken: VNNI, VBMI2, BITALG, GFNI, VAES - NOT available on Skylake-X
+x86-64-v4-modern = ["x86-64-v4x"]
+x86-64-v4x = []
 
 # ============================================================================
 # aarch64 presets (above baseline - NEON is implicit)
@@ -53,6 +54,14 @@ arm64-v2 = []
 # arm64-v3: Full modern ARM SIMD (Cortex-A510+, Apple M2+, Graviton 3+)
 # Matches archmage Arm64V3Token: v2 + FHM + FCMA + SHA3 + I8MM + BF16
 arm64-v3 = []
+
+# ============================================================================
+# wasm32 presets
+# ============================================================================
+
+# wasm32-simd128: WASM SIMD (matches archmage Wasm128Token)
+# multiversion elides on wasm32 — this is a no-op but signals intent
+wasm32-simd128 = []
 
 [dev-dependencies]
 multiversion = "0.8"
