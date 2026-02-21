@@ -9,8 +9,7 @@ Reference document for multiversed presets and CPU feature availability.
 | `x86-64-v3` | AVX2, FMA, BMI | Desktop/laptop baseline (2013+) |
 | `x86-64-v4` | + AVX-512 core | Skylake-X, Zen 4+ servers |
 | `x86-64-v4-modern` | + VNNI, VBMI2, GFNI, VAES | Ice Lake+, Zen 4+ (default) |
-| `arm64` | NEON | All AArch64 |
-| `arm64-v2` | + CRC, DotProd, FP16, AES | A55+, M1+, Graviton 2+ (default) |
+| `arm64` / `arm64-v2` | NEON, CRC, DotProd, FP16, AES | A55+, M1+, Graviton 2+ (default) |
 | `arm64-v3` | + SHA3, I8MM, BF16 | A510+, M2+, Graviton 3+ |
 
 For features beyond these presets, use raw target strings: `"aarch64+neon+sve"`
@@ -200,8 +199,7 @@ Based on the above data:
 
 | Preset | Key Features | Target Hardware |
 |--------|--------------|-----------------|
-| `arm64` | NEON | All AArch64 |
-| `arm64-v2` | + CRC, DotProd, FP16, AES, SHA2 | A55+, M1+, Graviton 2+ |
+| `arm64` / `arm64-v2` | NEON, CRC, DotProd, FP16, AES, SHA2 | A55+, M1+, Graviton 2+ |
 | `arm64-v3` | + FHM, FCMA, SHA3, I8MM, BF16 | A510+, M2+, Graviton 3+ |
 
 For additional aarch64 features (SVE, SVE2), use raw target strings.

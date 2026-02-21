@@ -77,8 +77,7 @@ Feature lists match the [archmage token registry] — the source of truth. Each 
 
 | Preset | Archmage Token | Key Features | Hardware |
 |--------|----------------|--------------|----------|
-| `arm64` | NeonToken | NEON | All AArch64 |
-| `arm64-v2` | Arm64V2Token | + CRC, DotProd, FP16, AES | Cortex-A55+, Apple M1+, Graviton 2+ |
+| `arm64` / `arm64-v2` | Arm64V2Token | NEON, CRC, DotProd, FP16, AES | Cortex-A55+, Apple M1+, Graviton 2+ |
 | `arm64-v3` | Arm64V3Token | + SHA3, I8MM, BF16 | Cortex-A510+, Apple M2+, Graviton 3+ |
 
 ### wasm32
@@ -104,16 +103,16 @@ The ~0.3ns difference is the indirect call cost. Feature checking happens at com
 
 ```toml
 # Default: x86-64-v3 + x86-64-v4x + arm64-v2 + wasm32-simd128
-multiversed = "0.2"
+multiversed = "0.3"
 
 # Minimal (v3 only, no AVX-512)
-multiversed = { version = "0.2", default-features = false, features = ["x86-64-v3", "arm64-v2"] }
+multiversed = { version = "0.3", default-features = false, features = ["x86-64-v3", "arm64-v2"] }
 
 # Add Skylake-X compatibility (base v4 without Ice Lake extras)
-multiversed = { version = "0.2", features = ["x86-64-v4"] }
+multiversed = { version = "0.3", features = ["x86-64-v4"] }
 
 # Disable multiversioning (debugging/profiling)
-multiversed = { version = "0.2", features = ["force-disable"] }
+multiversed = { version = "0.3", features = ["force-disable"] }
 ```
 
 ### Special Features

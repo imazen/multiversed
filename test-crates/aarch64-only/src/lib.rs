@@ -11,7 +11,7 @@ pub fn sum_all_aarch64(data: &[f32]) -> f32 {
     data.iter().sum()
 }
 
-/// Explicitly use arm64 (NEON baseline)
+/// Explicitly use arm64 (alias for arm64-v2: Arm64V2Token)
 #[multiversed("arm64")]
 pub fn sum_arm64(data: &[f32]) -> f32 {
     data.iter().sum()

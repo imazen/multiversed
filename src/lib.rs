@@ -55,8 +55,7 @@
 //!
 //! | Feature | Archmage Token | Key Features | Hardware |
 //! |---------|----------------|--------------|----------|
-//! | `arm64` | NeonToken | NEON | All AArch64 |
-//! | `arm64-v2` | Arm64V2Token | + CRC, DotProd, FP16, AES | Cortex-A55+, Apple M1+, Graviton 2+ |
+//! | `arm64` / `arm64-v2` | Arm64V2Token | NEON, CRC, DotProd, FP16, AES | Cortex-A55+, Apple M1+, Graviton 2+ |
 //! | `arm64-v3` | Arm64V3Token | + SHA3, I8MM, BF16 | Cortex-A510+, Apple M2+, Graviton 3+ |
 //!
 //! ## wasm32
@@ -106,12 +105,8 @@ const X86_64_V4: &str =
 const X86_64_V4_MODERN: &str =
     "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe+avx512f+avx512bw+avx512cd+avx512dq+avx512vl+avx512vpopcntdq+avx512ifma+avx512vbmi+avx512vbmi2+avx512bitalg+avx512vnni+vpclmulqdq+gfni+vaes";
 
-// arm64: NEON baseline (all AArch64)
-// Matches archmage NeonToken
-const ARM64: &str = "aarch64+neon";
-
-// arm64-v2: Modern ARM baseline (Cortex-A55+, Apple M1+, Graviton 2+)
-// Matches archmage Arm64V2Token
+// arm64 / arm64-v2: Modern ARM baseline (Cortex-A55+, Apple M1+, Graviton 2+)
+// Matches archmage Arm64V2Token. "arm64" is an alias for backwards compatibility.
 const ARM64_V2: &str = "aarch64+neon+crc+rdm+dotprod+fp16+aes+sha2";
 
 // arm64-v3: Full modern ARM SIMD (Cortex-A510+, Apple M2+, Graviton 3+)
@@ -134,9 +129,8 @@ fn resolve_target(s: &str) -> Option<&str> {
         "x86-64-v3" => Some(X86_64_V3),
         "x86-64-v4" => Some(X86_64_V4),
         "x86-64-v4-modern" | "x86-64-v4x" => Some(X86_64_V4_MODERN),
-        // aarch64 presets
-        "arm64" => Some(ARM64),
-        "arm64-v2" => Some(ARM64_V2),
+        // aarch64 presets ("arm64" is an alias for "arm64-v2")
+        "arm64" | "arm64-v2" => Some(ARM64_V2),
         "arm64-v3" => Some(ARM64_V3),
         // wasm32 - multiversion doesn't support it, ignore
         "wasm32-simd128" => None,
@@ -215,11 +209,10 @@ fn default_aarch64_targets() -> Vec<&'static str> {
     #[cfg(feature = "arm64-v3")]
     targets.push(ARM64_V3);
 
+    // "arm64" is an alias for "arm64-v2" — both activate the arm64-v2 feature,
+    // so we only check arm64-v2 here to avoid duplicate targets.
     #[cfg(feature = "arm64-v2")]
     targets.push(ARM64_V2);
-
-    #[cfg(feature = "arm64")]
-    targets.push(ARM64);
 
     targets
 }

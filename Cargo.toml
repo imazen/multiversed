@@ -1,6 +1,6 @@
 [package]
 name = "multiversed"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Attribute macros wrapping multiversion with predefined SIMD target presets"
 license = "MIT OR Apache-2.0"
@@ -44,8 +44,9 @@ x86-64-v4x = []
 # aarch64 presets (above baseline - NEON is implicit)
 # ============================================================================
 
-# arm64: NEON baseline (all AArch64 — matches archmage NeonToken)
-arm64 = []
+# arm64: Alias for arm64-v2 (backwards compatibility)
+# In 0.2.x this was neon+fp16; now resolves to the full Arm64V2Token feature set.
+arm64 = ["arm64-v2"]
 
 # arm64-v2: Modern ARM baseline (Cortex-A55+, Apple M1+, Graviton 2+) - RECOMMENDED
 # Matches archmage Arm64V2Token: NEON + CRC + RDM + DotProd + FP16 + AES + SHA2

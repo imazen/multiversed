@@ -111,11 +111,9 @@ fn report_aarch64() {
         };
     }
 
-    // arm64: NeonToken
-    let neon_features: &[(&str, bool)] = &[("neon", check!("neon"))];
-
-    // arm64-v2: Arm64V2Token (delta over neon)
+    // arm64 / arm64-v2: Arm64V2Token ("arm64" is an alias for "arm64-v2")
     let v2_features: &[(&str, bool)] = &[
+        ("neon", check!("neon")),
         ("crc", check!("crc")),
         ("rdm", check!("rdm")),
         ("dotprod", check!("dotprod")),
@@ -133,12 +131,10 @@ fn report_aarch64() {
         ("bf16", check!("bf16")),
     ];
 
-    let has_neon = neon_features.iter().all(|(_, ok)| *ok);
-    let has_v2 = has_neon && v2_features.iter().all(|(_, ok)| *ok);
+    let has_v2 = v2_features.iter().all(|(_, ok)| *ok);
     let has_v3 = has_v2 && v3_features.iter().all(|(_, ok)| *ok);
 
-    print_preset("arm64", "NeonToken", has_neon, neon_features);
-    print_preset("arm64-v2", "Arm64V2Token", has_v2, v2_features);
+    print_preset("arm64/arm64-v2", "Arm64V2Token", has_v2, v2_features);
     print_preset("arm64-v3", "Arm64V3Token", has_v3, v3_features);
 }
 
@@ -152,14 +148,16 @@ fn report_wasm() {
     let is_wasm = cfg!(target_arch = "wasm32");
 
     let status = if is_wasm {
-        if has_simd128 { "YES" } else { "no" }
+        if has_simd128 {
+            "YES"
+        } else {
+            "no"
+        }
     } else {
         "n/a (not wasm32)"
     };
 
-    println!(
-        "  wasm32-simd128  Wasm128Token    {status}",
-    );
+    println!("  wasm32-simd128  Wasm128Token    {status}",);
 }
 
 // ============================================================================

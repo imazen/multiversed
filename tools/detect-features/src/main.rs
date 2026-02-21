@@ -511,15 +511,37 @@ fn detect_aarch64_features() {
     print_features("Security", SECURITY_FEATURES);
     print_features("Other", OTHER_FEATURES);
 
-    // Preset levels
+    // Preset levels (matching archmage token-registry.toml)
     println!("### Preset Level Summary");
-    // arm64 preset requires neon (baseline) + fp16
-    let has_arm64 = is_detected("fp16");
 
-    println!("  arm64 (neon+fp16): {}", if has_arm64 { "✓" } else { "✗" });
+    // arm64 / arm64-v2: Arm64V2Token (neon+crc+rdm+dotprod+fp16+aes+sha2)
+    let has_v2 = is_detected("neon")
+        && is_detected("crc")
+        && is_detected("rdm")
+        && is_detected("dotprod")
+        && is_detected("fp16")
+        && is_detected("aes")
+        && is_detected("sha2");
+
+    // arm64-v3: Arm64V3Token (v2 + fhm+fcma+sha3+i8mm+bf16)
+    let has_v3 = has_v2
+        && is_detected("fhm")
+        && is_detected("fcma")
+        && is_detected("sha3")
+        && is_detected("i8mm")
+        && is_detected("bf16");
+
+    println!(
+        "  arm64/arm64-v2 (Arm64V2Token): {}",
+        if has_v2 { "✓" } else { "✗" }
+    );
+    println!(
+        "  arm64-v3 (Arm64V3Token):       {}",
+        if has_v3 { "✓" } else { "✗" }
+    );
     println!();
-    println!("  For additional features (dotprod, sha3, sve, etc.),");
-    println!("  use raw target strings: \"aarch64+neon+dotprod+sha3\"");
+    println!("  For additional features (sve, sve2, etc.),");
+    println!("  use raw target strings: \"aarch64+neon+sve2\"");
     println!();
 
     // Target string
