@@ -285,13 +285,19 @@ fn multiversed_impl(args: MultiversedArgs, func: ItemFn) -> TokenStream {
             .collect();
         (x86, aarch64)
     } else {
-        // Explicit targets - resolve presets and partition by architecture
+        // Explicit targets - resolve presets and partition by architecture.
+        // Deduplicate because aliases (e.g., "arm64" and "arm64-v2") resolve to the
+        // same target string, and multiversion would generate duplicate function versions.
         // Note: wasm32 targets are filtered out (multiversion doesn't support wasm32)
-        let resolved: Vec<String> = args
-            .targets
-            .iter()
-            .filter_map(|s| resolve_target(s).map(String::from))
-            .collect();
+        let mut resolved: Vec<String> = Vec::new();
+        for s in &args.targets {
+            if let Some(target) = resolve_target(s) {
+                let target = target.to_string();
+                if !resolved.contains(&target) {
+                    resolved.push(target);
+                }
+            }
+        }
 
         let x86: Vec<String> = resolved
             .iter()
