@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+Patch: updated README examples, no code changes.
+
 ## 0.3.0
 
 Breaking changes to defaults; no API changes.
