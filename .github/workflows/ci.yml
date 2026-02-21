@@ -77,7 +77,10 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
+          targets: wasm32-unknown-unknown,wasm32-wasip1
+
+      - name: Install wasmtime
+        run: curl https://wasmtime.dev/install.sh -sSf | bash && echo "$HOME/.wasmtime/bin" >> $GITHUB_PATH
 
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
@@ -87,6 +90,17 @@ jobs:
 
       - name: Build for wasm32 (all features)
         run: cargo build --target wasm32-unknown-unknown --all-features --verbose
+
+      - name: Test wasm-simd128 crate (with simd128)
+        run: cargo test -p test-wasm-simd128 --target wasm32-wasip1 -- --nocapture
+        env:
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime
+
+      - name: Test wasm-simd128 crate (without simd128)
+        run: cargo test -p test-wasm-simd128 --target wasm32-wasip1 -- --nocapture
+        env:
+          CARGO_TARGET_WASM32_WASIP1_RUNNER: wasmtime
+          RUSTFLAGS: "-C target-feature=-simd128"
 
   # Cross-compilation tests
   cross:

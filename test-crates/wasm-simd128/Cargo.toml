@@ -1,0 +1,13 @@
+[package]
+name = "test-wasm-simd128"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+multiversed = { path = "../..", default-features = false, features = [
+    "x86-64-v3",
+    "arm64-v2",
+    "wasm32-simd128",
+] }
+multiversion = "0.8"

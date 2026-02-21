@@ -80,6 +80,7 @@ members = [
     "test-crates/force-disable",
     "test-crates/x86-only",
     "test-crates/aarch64-only",
+    "test-crates/wasm-simd128",
     "tools/detect-features",
 ]
 
