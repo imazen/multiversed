@@ -20,6 +20,10 @@ Breaking changes to defaults; no API changes.
 - **wasm32-wasip1 test crate** (`test-crates/wasm-simd128/`): runs under wasmtime to verify compilation and correctness on wasm32.
 - **CI**: wasm32 build + test steps (with and without simd128), additional aarch64 build combinations, ARM runners (ubuntu-24.04-arm, windows-11-arm).
 
+### Fixed
+
+- **Duplicate target deduplication.** When aliases resolve to the same target string (e.g., `"arm64"` and `"arm64-v2"` both resolve to Arm64V2Token), the macro now deduplicates them. Previously this caused a multiversion name collision on aarch64 targets.
+
 ## 0.2.0
 
 Initial release with x86-64-v2/v3/v4/v4-modern and arm64 presets.
