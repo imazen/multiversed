@@ -148,11 +148,7 @@ fn report_wasm() {
     let is_wasm = cfg!(target_arch = "wasm32");
 
     let status = if is_wasm {
-        if has_simd128 {
-            "YES"
-        } else {
-            "no"
-        }
+        if has_simd128 { "YES" } else { "no" }
     } else {
         "n/a (not wasm32)"
     };

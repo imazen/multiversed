@@ -7,7 +7,7 @@
 //! The goal is to determine if listing many features in the target string
 //! adds measurable overhead to the runtime dispatch.
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use criterion::{Criterion, Throughput, black_box, criterion_group, criterion_main};
 
 // ============================================================================
 // Test functions with different target string sizes

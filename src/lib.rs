@@ -78,7 +78,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::parse::{Parse, ParseStream};
-use syn::{parse_macro_input, ItemFn, LitStr, Token};
+use syn::{ItemFn, LitStr, Token, parse_macro_input};
 
 // ============================================================================
 // Target string definitions (preset name -> multiversion target string)
@@ -92,18 +92,15 @@ const X86_64_V2: &str = "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg
 
 // x86-64-v3: AVX2 + FMA (Haswell 2013+, Zen 1 2017+)
 // Matches archmage X64V3Token
-const X86_64_V3: &str =
-    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe";
+const X86_64_V3: &str = "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe";
 
 // x86-64-v4: AVX-512 (Skylake-X 2017+, Zen 4 2022+)
 // Matches archmage X64V4Token — pure psABI v4: F+CD+VL+DQ+BW only
-const X86_64_V4: &str =
-    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe+avx512f+avx512bw+avx512cd+avx512dq+avx512vl";
+const X86_64_V4: &str = "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe+avx512f+avx512bw+avx512cd+avx512dq+avx512vl";
 
 // x86-64-v4-modern: Full modern AVX-512 (Ice Lake 2019+, Zen 4 2022+)
 // Matches archmage X64V4xToken — adds VNNI, VBMI2, BITALG, GFNI, VAES, VPCLMULQDQ
-const X86_64_V4_MODERN: &str =
-    "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe+avx512f+avx512bw+avx512cd+avx512dq+avx512vl+avx512vpopcntdq+avx512ifma+avx512vbmi+avx512vbmi2+avx512bitalg+avx512vnni+vpclmulqdq+gfni+vaes";
+const X86_64_V4_MODERN: &str = "x86_64+sse+sse2+sse3+ssse3+sse4.1+sse4.2+popcnt+cmpxchg16b+avx+avx2+fma+bmi1+bmi2+f16c+lzcnt+movbe+avx512f+avx512bw+avx512cd+avx512dq+avx512vl+avx512vpopcntdq+avx512ifma+avx512vbmi+avx512vbmi2+avx512bitalg+avx512vnni+vpclmulqdq+gfni+vaes";
 
 // arm64 / arm64-v2: Modern ARM baseline (Cortex-A55+, Apple M1+, Graviton 2+)
 // Matches archmage Arm64V2Token. "arm64" is an alias for backwards compatibility.
