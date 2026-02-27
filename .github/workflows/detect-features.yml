@@ -14,7 +14,7 @@ jobs:
           # x86_64 runners
           - os: ubuntu-latest
             name: Linux x86_64
-          - os: windows-2025
+          - os: windows-latest
             name: Windows x86_64
           - os: macos-15-intel
             name: macOS x86_64 (Intel)
@@ -24,7 +24,7 @@ jobs:
             name: Linux aarch64
           - os: windows-11-arm
             name: Windows aarch64
-          - os: macos-15
+          - os: macos-latest
             name: macOS aarch64 (Apple Silicon)
 
     name: ${{ matrix.name }}
