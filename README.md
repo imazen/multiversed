@@ -1,6 +1,41 @@
-# multiversed
+# multiversed [![CI](https://img.shields.io/github/actions/workflow/status/imazen/multiversed/ci.yml?style=flat-square&label=CI)](https://github.com/imazen/multiversed/actions/workflows/ci.yml) [![crates.io](https://img.shields.io/crates/v/multiversed?style=flat-square)](https://crates.io/crates/multiversed) [![lib.rs](https://img.shields.io/crates/v/multiversed?style=flat-square&label=lib.rs&color=blue)](https://lib.rs/crates/multiversed) [![docs.rs](https://img.shields.io/docsrs/multiversed?style=flat-square)](https://docs.rs/multiversed) [![license](https://img.shields.io/crates/l/multiversed?style=flat-square)](#license)
 
 Attribute macros wrapping [`multiversion`](https://crates.io/crates/multiversion) with predefined SIMD target presets.
+
+## Use `#[autoversion]` from archmage instead
+
+For new code, reach for [`archmage`](https://github.com/imazen/archmage)'s
+`#[autoversion]` — the same write-scalar-once, dispatch-per-CPU-tier workflow,
+built on the same tier definitions (both crates share the archmage token
+registry), with capability tokens, `incant!` dispatch, and
+[`magetypes`](https://crates.io/crates/magetypes) SIMD types available when you
+outgrow auto-vectorization:
+
+```rust
+use archmage::prelude::*;
+
+#[autoversion]                 // or explicit tiers: #[autoversion(v4, v3, neon)]
+pub fn dot_product(a: &[f32], b: &[f32]) -> f32 {
+    a.iter().zip(b).map(|(x, y)| x * y).sum()
+}
+
+// Call directly — per-tier variants + a runtime dispatcher are generated.
+let result = dot_product(&a, &b);
+```
+
+Preset → tier mapping for migration:
+
+| multiversed preset | `#[autoversion]` tier |
+|--------------------|-----------------------|
+| `x86-64-v2` | `v2` |
+| `x86-64-v3` | `v3` |
+| `x86-64-v4` | `v4` |
+| `x86-64-v4x` / `x86-64-v4-modern` | `v4x` |
+| `arm64` / `arm64-v2` | `arm_v2` |
+| `arm64-v3` | `arm_v3` |
+| `wasm32-simd128` | `wasm128` |
+
+multiversed keeps working as documented below.
 
 ## Why?
 

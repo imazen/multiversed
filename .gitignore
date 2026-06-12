@@ -1,2 +1,5 @@
 /target
 Cargo.lock
+
+# agent coordination marker — never committed
+.workongoing
