@@ -90,6 +90,8 @@ pub fn mixed_targets(data: &[f32]) -> f32 {
 }
 ```
 
+Call the generated function like any other — it's safe to invoke from any context, with no `unsafe` and no `#[target_feature]` on your function. On the first call the dispatcher picks the best matching target via runtime CPU feature detection and caches the choice in a static atomic; every later call is just an atomic load plus an indirect call (no per-call CPUID). If no preset matches the host CPU, multiversion falls back to a portable scalar version of your function, so it always runs.
+
 ## Presets
 
 Feature lists match the [archmage token registry] — the source of truth. Each preset is a complete, non-cumulative feature set based on the [x86-64 psABI] microarchitecture levels and ARM architecture versions.
@@ -136,10 +138,23 @@ The ~0.3ns difference is the indirect call cost. Feature checking happens at com
 
 ## Cargo Features
 
+**You also need a direct dependency on [`multiversion`](https://crates.io/crates/multiversion).**
+The `#[multiversed]` macro expands to `#[multiversion::multiversion(...)]`, which is a
+*bare* path resolved in your crate — `multiversed` does not re-export `multiversion`, so the
+generated code only compiles if `multiversion` is in your own `[dependencies]`. (The one
+exception is the `force-disable` feature, which generates no multiversion code; then it isn't
+needed, though it's harmless to keep.)
+
 ```toml
+[dependencies]
 # Default: x86-64-v3 + x86-64-v4x + arm64-v2 + wasm32-simd128
 multiversed = "0.3"
+multiversion = "0.8"   # required: the macro expands to multiversion::multiversion(...)
+```
 
+Other configurations (each still needs the `multiversion = "0.8"` line above):
+
+```toml
 # Minimal (v3 only, no AVX-512)
 multiversed = { version = "0.3", default-features = false, features = ["x86-64-v3", "arm64-v2"] }
 
